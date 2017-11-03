@@ -7,14 +7,38 @@
     android:background="@drawable/backgroundlogin"
     tools:context="com.fmc.phototracker.LoginActivity">
 
+    <EditText
+        android:id="@+id/TxtInputUser"
+        android:layout_width="300sp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="74dp"
+        android:hint="@string/user"
+        android:inputType="text"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColorLink="@color/colorPrimary" />
+
+    <EditText
+        android:id="@+id/TxtInputPass"
+        android:layout_width="300sp"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/TxtInputUser"
+        android:layout_below="@+id/TxtInputUser"
+        android:layout_marginTop="12dp"
+        android:hint="@string/password"
+        android:inputType="textPassword"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColorLink="@color/colorPrimary" />
+
     <Button
         android:id="@+id/button_sesion"
         style="@android:style/Widget.Holo.Button.Borderless"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/TxtInputPass"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="218dp"
+        android:layout_marginTop="12dp"
         android:text="@string/botonSesion"
         android:textSize="24sp" />
 
@@ -23,10 +47,41 @@
         style="@android:style/Widget.Holo.Button.Borderless"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/textView2"
+        android:layout_centerHorizontal="true"
+        android:text="@string/botonExplora"
+        android:textSize="22sp" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/button_sesion"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="35dp"
-        android:text="@string/botonExplora"
+        android:text="@string/o"
+        android:textSize="22sp"
+        android:textColor="@android:color/white"/>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/TxtInputPass"
+        android:layout_marginBottom="20dp"
+        android:text="@string/account"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="22sp" />
+
+    <Button
+        android:id="@+id/button_register"
+        style="@android:style/Widget.Holo.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/textView3"
+        android:layout_alignBottom="@+id/textView3"
+        android:layout_alignEnd="@+id/TxtInputPass"
+        android:text="@string/register"
         android:textSize="22sp" />
 
 </RelativeLayout>
