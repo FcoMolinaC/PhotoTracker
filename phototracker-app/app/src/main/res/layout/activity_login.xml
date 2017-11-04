@@ -17,7 +17,7 @@
         android:hint="@string/user"
         android:inputType="text"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textColorLink="@color/colorPrimary" />
+        android:textColorLink="@color/primary_material_light_1" />
 
     <EditText
         android:id="@+id/TxtInputPass"
@@ -29,7 +29,7 @@
         android:hint="@string/password"
         android:inputType="textPassword"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textColorLink="@color/colorPrimary" />
+        android:textColorLink="@color/primary_material_light_1" />
 
     <Button
         android:id="@+id/button_sesion"

@@ -8,4 +8,9 @@
     tools:context="com.fmc.phototracker.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
+    <org.osmdroid.views.MapView
+        android:id="@+id/openmapview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"/>
+
 </android.support.constraint.ConstraintLayout>

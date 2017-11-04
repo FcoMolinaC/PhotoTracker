@@ -2,6 +2,7 @@ package com.fmc.phototracker;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +16,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class LoginActivity extends AppCompatActivity {
+
+    boolean login;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,11 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña", Toast.LENGTH_SHORT).show();
                 } else {
                     //To-do: Comprobar con base de datos cuando esté implementado
+                    //To-do: Crear sentencia de control para acceder al menú personal
+                    login = true;
+                    Intent mainIntent = new Intent().setClass(
+                            LoginActivity.this, MainActivity.class);
+                    startActivity(mainIntent);
                 }
             }
         });
