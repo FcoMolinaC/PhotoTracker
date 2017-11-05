@@ -4,8 +4,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -64,6 +64,7 @@ public class LoginActivity extends AppCompatActivity {
                     Intent mainIntent = new Intent().setClass(
                             LoginActivity.this, MainActivity.class);
                     startActivity(mainIntent);
+                    finish();
                 }
             }
         });

@@ -30,6 +30,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
+        app:backgroundTint="@android:color/holo_green_dark"
+        app:elevation="5dp"
         app:srcCompat="@android:drawable/ic_menu_add" />
 
     <android.support.design.widget.FloatingActionButton
@@ -38,7 +40,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_margin="@dimen/fab_margin"
-        app:backgroundTint="@color/colorPrimary"
+        app:backgroundTint="?android:attr/colorActivatedHighlight"
+        app:elevation="5dp"
+        app:fabSize="mini"
         app:layout_anchor="@+id/include"
         app:layout_anchorGravity="left|bottom"
         app:srcCompat="@android:drawable/ic_menu_camera" />

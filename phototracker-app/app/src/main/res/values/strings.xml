@@ -17,4 +17,6 @@
     <string name="account">¿No tienes cuenta?</string>
     <string name="register">Registrate</string>
     <string name="PhotoTracker">PhotoTracker</string>
+    <string name="userloged">fmolinacdev@gmail.com</string>
+    <string name="appName">PhotoTracker</string>
 </resources>

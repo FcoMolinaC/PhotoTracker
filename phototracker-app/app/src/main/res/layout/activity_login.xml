@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -17,7 +16,8 @@
         android:hint="@string/user"
         android:inputType="text"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textColorLink="@color/primary_material_light_1" />
+        android:textColorLink="#E0E0E0"
+        android:textColor="#E0E0E0"/>
 
     <EditText
         android:id="@+id/TxtInputPass"
@@ -29,7 +29,8 @@
         android:hint="@string/password"
         android:inputType="textPassword"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textColorLink="@color/primary_material_light_1" />
+        android:textColorLink="#E0E0E0"
+        android:textColor="#E0E0E0"/>
 
     <Button
         android:id="@+id/button_sesion"
@@ -66,12 +67,13 @@
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/button_explore"
         android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/TxtInputPass"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="19dp"
+        android:layout_marginEnd="10dp"
         android:text="@string/account"
         android:textColor="@android:color/darker_gray"
-        android:textSize="22sp" />
+        android:textSize="18sp" />
 
     <Button
         android:id="@+id/button_register"
@@ -82,6 +84,6 @@
         android:layout_alignBottom="@+id/textView3"
         android:layout_alignEnd="@+id/TxtInputPass"
         android:text="@string/register"
-        android:textSize="22sp" />
+        android:textSize="20sp" />
 
 </RelativeLayout>

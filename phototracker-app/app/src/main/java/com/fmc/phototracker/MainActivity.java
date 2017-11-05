@@ -1,11 +1,13 @@
 package com.fmc.phototracker;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -13,14 +15,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.ScaleBarOverlay;
 import org.osmdroid.views.overlay.compass.CompassOverlay;
 import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -28,7 +35,10 @@ public class MainActivity extends AppCompatActivity
     private MapView myOpenMapView;
     private IMapController myMapController;
     private CompassOverlay mCompassOverlay;
-    private ScaleBarOverlay mScaleBarOverlay;
+
+    private Context ctx = getApplicationContext();
+
+    static final int REQUEST_IMAGE_CAPTURE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +62,11 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 Snackbar.make(view, "Foto georreferenciada", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                try {
+                    dispatchTakePictureIntent();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -72,16 +87,12 @@ public class MainActivity extends AppCompatActivity
         myMapController = myOpenMapView.getController();
         myMapController.setZoom(4);
 
-        GeoPoint center = new GeoPoint(36.680725,48.500430);
+        GeoPoint center = new GeoPoint(40.416963,-3.703531);
         myMapController.animateTo(center);
 
-        Context ctx = getApplicationContext();
         this.mCompassOverlay = new CompassOverlay(ctx, new InternalCompassOrientationProvider(ctx), myOpenMapView);
         this.mCompassOverlay.enableCompass();
         myOpenMapView.getOverlays().add(this.mCompassOverlay);
-
-        this.mScaleBarOverlay = new ScaleBarOverlay(ctx);
-        this.mScaleBarOverlay.setCentred(true);
     }
 
 
@@ -127,8 +138,10 @@ public class MainActivity extends AppCompatActivity
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
-        } else if (id == R.id.nav_manage) {
-
+        } else if (id == R.id.nav_explore) {
+            Intent mainIntent = new Intent().setClass(
+                    MainActivity.this, ExploreActivity.class);
+            startActivity(mainIntent);
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
@@ -138,5 +151,29 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void dispatchTakePictureIntent() throws IOException {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            createImageFile();
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        String mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
     }
 }

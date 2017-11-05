@@ -2,8 +2,8 @@ package com.fmc.phototracker;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Window;
 
 import java.util.Timer;
@@ -12,6 +12,7 @@ import java.util.TimerTask;
 public class SplashScreen extends AppCompatActivity {
 
     // Establece la duración de la actividad
+    // To-Do: establecer el tiempo de carga de la base de datos cuando esté implementada
     private static final long SPLASH_SCREEN_DELAY = 3000;
 
     @Override

@@ -13,9 +13,9 @@
             android:icon="@drawable/ic_menu_gallery"
             android:title="Mis fotos" />
         <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Herramientas" />
+            android:id="@+id/nav_explore"
+            android:icon="@drawable/ic_language_black_24dp"
+            android:title="Explorar" />
     </group>
 
     <item android:title="Comunicación">
