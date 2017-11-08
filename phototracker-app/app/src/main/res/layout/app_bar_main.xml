@@ -32,6 +32,7 @@
         android:layout_margin="@dimen/fab_margin"
         app:backgroundTint="@android:color/holo_green_dark"
         app:elevation="5dp"
+        app:fabSize="mini"
         app:srcCompat="@android:drawable/ic_menu_add" />
 
     <android.support.design.widget.FloatingActionButton
