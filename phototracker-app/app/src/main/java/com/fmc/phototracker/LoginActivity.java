@@ -58,8 +58,8 @@ public class LoginActivity extends AppCompatActivity {
                 } else if (password.matches("")) {
                     Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña", Toast.LENGTH_SHORT).show();
                 } else {
-                    //To-do: Comprobar con base de datos cuando esté implementado
-                    //To-do: Crear sentencia de control para acceder al menú personal
+                    //ToDo: Comprobar con base de datos cuando esté implementado
+                    //ToDo: Crear sentencia de control para acceder al menú personal
                     login = true;
                     Intent mainIntent = new Intent().setClass(
                             LoginActivity.this, MainActivity.class);
@@ -100,6 +100,19 @@ public class LoginActivity extends AppCompatActivity {
                 });
                 AlertDialog dialog = alert.create();
                 dialog.show();
+            }
+        });
+
+        button_explore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //ToDo: Comprobar con base de datos cuando esté implementado
+                //ToDo: Crear sentencia de control para acceder al menú personal
+                login = false;
+                Intent mainIntent = new Intent().setClass(
+                        LoginActivity.this, MainActivity.class);
+                startActivity(mainIntent);
+                finish();
             }
         });
     }

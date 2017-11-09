@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -32,6 +33,7 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.compass.CompassOverlay;
 import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
 
@@ -144,9 +146,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_explore) {
-            Intent mainIntent = new Intent().setClass(
-                    MainActivity.this, ExploreActivity.class);
-            startActivity(mainIntent);
+
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
@@ -193,9 +193,13 @@ public class MainActivity extends AppCompatActivity
 
         }
 
-        GeoPoint center = new GeoPoint(lat, lon);
-        myMapController.animateTo(center);
-        myMapController.setZoom(10);
+        GeoPoint pos = new GeoPoint(lat, lon);
+        myMapController.animateTo(pos);
+        myMapController.setZoom(20);
+
+        OverlayItem overlayItem = new OverlayItem("Posición", "", pos);
+        Drawable markerDrawable = this.getResources().getDrawable(R.drawable.pospoint);
+        overlayItem.setMarker(markerDrawable);
 
         runOnUiThread(new Runnable() {
             @Override
@@ -205,8 +209,8 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        long time = 0;
-        float distance = 0;
+        long time = 5000;
+        float distance = 5;
         locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, time, distance, this);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, time, distance, this);
         if (locationManager.getAllProviders().contains("network")) {
