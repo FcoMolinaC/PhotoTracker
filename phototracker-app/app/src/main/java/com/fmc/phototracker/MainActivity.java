@@ -29,10 +29,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.compass.CompassOverlay;
 import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
@@ -40,6 +43,7 @@ import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -52,10 +56,16 @@ public class MainActivity extends AppCompatActivity
     CompassOverlay mCompassOverlay;
 
     Location location;
-    double lat, lon, accuracy;
+    LocationManager locationManager;
+    double lat, lon, alt, accuracy;
     long fix;
+    long time = 5000;
+    float distance = 5;
+    GeoPoint pos;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    Drawable myCurrentLocationMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,12 +74,27 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        initializeMap();
+        registerLocationListener();
+
         FloatingActionButton fabTrack = findViewById(R.id.fabTrack);
         fabTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Comienza a grabar track", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    if (accuracy <= 20.0) {
+                        //To-do: código para comenzar a grabar el recorrido
+                        tracking();
+                        Snackbar.make(view, "Comenzando a grabar recorrido", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    } else {
+                        Snackbar.make(view, "No hay precisión suficiente para grabar un recorrido", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    }
+                } else {
+                    Snackbar.make(view, "GPS desactivado. Actívalo para comenzar a grabar recorrido", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
             }
         });
 
@@ -81,6 +106,7 @@ public class MainActivity extends AppCompatActivity
                         .setAction("Action", null).show();
                 try {
                     dispatchTakePictureIntent();
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -95,20 +121,6 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        myOpenMapView = findViewById(R.id.openmapview);
-        myOpenMapView.setTileSource(TileSourceFactory.MAPNIK);
-        myOpenMapView.setMultiTouchControls(true);
-        myOpenMapView.setBuiltInZoomControls(true);
-
-        myMapController = myOpenMapView.getController();
-
-        Context ctx = getApplicationContext();
-        mCompassOverlay = new CompassOverlay(ctx, new InternalCompassOrientationProvider(ctx), myOpenMapView);
-        mCompassOverlay.enableCompass();
-        myOpenMapView.getOverlays().add(this.mCompassOverlay);
-
-        registerLocationListener();
     }
 
     @Override
@@ -158,8 +170,22 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    public void initializeMap() {
+        Context ctx = getApplicationContext();
+
+        myOpenMapView = findViewById(R.id.openmapview);
+        myOpenMapView.setTileSource(TileSourceFactory.MAPNIK);
+        myOpenMapView.setMultiTouchControls(true);
+        myOpenMapView.setBuiltInZoomControls(true);
+
+        myMapController = myOpenMapView.getController();
+
+        mCompassOverlay = new CompassOverlay(ctx, new InternalCompassOrientationProvider(ctx), myOpenMapView);
+        mCompassOverlay.enableCompass();
+        myOpenMapView.getOverlays().add(this.mCompassOverlay);
+    }
+
     public void registerLocationListener() {
-        LocationManager locationManager;
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         Criteria criteria = new Criteria();
@@ -175,7 +201,15 @@ public class MainActivity extends AppCompatActivity
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
+
         assert locationManager != null;
+
+        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, time, distance, this);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, time, distance, this);
+        if (locationManager.getAllProviders().contains("network")) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, time, distance, this);
+        }
+
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         } else {
@@ -185,21 +219,40 @@ public class MainActivity extends AppCompatActivity
         if (location != null) {
             lat = location.getLatitude();
             lon = location.getLongitude();
+            alt = location.getAltitude();
             fix = location.getTime();
             accuracy = location.getAccuracy();
-            Toast.makeText(this, "Latitud: " + lat + ", Longitud: " + lon + "\nPrecision: " + accuracy + " m", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Latitud: " + lat +
+                            ",\nLongitud: " + lon +
+                            "\nAltitud: " + alt +
+                            "\nPrecision: " + accuracy + " m",
+                    Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "No hay localización", Toast.LENGTH_SHORT).show();
 
         }
 
-        GeoPoint pos = new GeoPoint(lat, lon);
-        myMapController.animateTo(pos);
-        myMapController.setZoom(20);
+        pos = new GeoPoint(lat, lon);
 
-        OverlayItem overlayItem = new OverlayItem("Posición", "", pos);
-        Drawable markerDrawable = this.getResources().getDrawable(R.drawable.pospoint);
-        overlayItem.setMarker(markerDrawable);
+        myMapController.animateTo(pos);
+        myMapController.setZoom(15);
+
+        DefaultResourceProxyImpl resourceProxy = new DefaultResourceProxyImpl(getApplicationContext());
+        OverlayItem myLocationOverlayItem = new OverlayItem("Here", "Current Position", pos);
+        myCurrentLocationMarker = this.getResources().getDrawable(R.drawable.point);
+        myLocationOverlayItem.setMarker(myCurrentLocationMarker);
+        final ArrayList<OverlayItem> items = new ArrayList<>();
+        items.add(myLocationOverlayItem);
+        Overlay currentLocationOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+            public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
+                return true;
+            }
+
+            public boolean onItemLongPress(final int index, final OverlayItem item) {
+                return true;
+            }
+        }, resourceProxy);
+        this.myOpenMapView.getOverlays().add(currentLocationOverlay);
 
         runOnUiThread(new Runnable() {
             @Override
@@ -208,18 +261,12 @@ public class MainActivity extends AppCompatActivity
                 task.execute(new LatLong(lat, lon));
             }
         });
-
-        long time = 5000;
-        float distance = 5;
-        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, time, distance, this);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, time, distance, this);
-        if (locationManager.getAllProviders().contains("network")) {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, time, distance, this);
-        }
     }
 
     @Override
     public void onLocationChanged(Location location) {
+        myCurrentLocationMarker.setVisible(false, true);
+        registerLocationListener();
     }
 
     @Override
@@ -228,10 +275,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onProviderEnabled(String s) {
+        Toast.makeText(this, "La señal GPS está disponible", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onProviderDisabled(String s) {
+        Toast.makeText(this, "La señal GPS se ha desactivado", Toast.LENGTH_SHORT).show();
     }
 
     protected class GeocodeTask extends AsyncTask<LatLong, Void, String> {
@@ -275,9 +324,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private File createImageFile() throws IOException {
+    private void createImageFile() throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        String imageFileName = "PhT_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(
                 imageFileName,
@@ -285,8 +334,11 @@ public class MainActivity extends AppCompatActivity
                 storageDir
         );
 
-        String mCurrentPhotoPath = image.getAbsolutePath();
-        return image;
+        String currentPhoto = image.getAbsolutePath();
+    }
+
+    private void tracking() {
+        //To-do: Código para grabar recorrido
     }
 
     class LatLong {
@@ -295,14 +347,6 @@ public class MainActivity extends AppCompatActivity
         LatLong(double lat, double lon) {
             this.lat = lat;
             this.lon = lon;
-        }
-
-        public double getLat() {
-            return lat;
-        }
-
-        public double getLon() {
-            return lon;
         }
     }
 }
