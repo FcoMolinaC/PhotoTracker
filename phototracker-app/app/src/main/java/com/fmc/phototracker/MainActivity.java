@@ -1,6 +1,8 @@
 package com.fmc.phototracker;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,6 +13,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,6 +27,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -62,8 +66,15 @@ public class MainActivity extends AppCompatActivity
     long time = 5000;
     float distance = 5;
     GeoPoint pos;
+    OverlayItem myLocationOverlayItem;
 
-    static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int CAMERA_REQUEST = 1888;
+    private static final String JPEG_FILE_PREFIX = "IMG_";
+    private static final String JPEG_FILE_SUFFIX = ".jpg";
+    private static final int ACTION_TAKE_PHOTO_B = 1;
+    private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
+
+    private String mCurrentPhotoPath;
 
     Drawable myCurrentLocationMarker;
 
@@ -74,15 +85,18 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mAlbumStorageDirFactory = new BaseAlbumDirFactory();
+
         initializeMap();
         registerLocationListener();
+        myMapController.setZoom(22);
 
         FloatingActionButton fabTrack = findViewById(R.id.fabTrack);
         fabTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    if (accuracy <= 20.0) {
+                    if (accuracy <= 10.0) {
                         //To-do: código para comenzar a grabar el recorrido
                         tracking();
                         Snackbar.make(view, "Comenzando a grabar recorrido", Snackbar.LENGTH_LONG)
@@ -98,18 +112,20 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        FloatingActionButton fabPosition = findViewById(R.id.fabPosition);
+        fabPosition.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                myPosition();
+            }
+        });
+
         FloatingActionButton fabPhoto = findViewById(R.id.fabPhoto);
         fabPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Foto georreferenciada", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                try {
-                    dispatchTakePictureIntent();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(cameraIntent, CAMERA_REQUEST);
             }
         });
 
@@ -121,6 +137,12 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+            dispatchTakePictureIntent(ACTION_TAKE_PHOTO_B);
+        }
     }
 
     @Override
@@ -170,6 +192,8 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    // ----------------------------------------------------------------------------------------------------------------
+    // Métodos para mapas y track
     public void initializeMap() {
         Context ctx = getApplicationContext();
 
@@ -185,6 +209,7 @@ public class MainActivity extends AppCompatActivity
         myOpenMapView.getOverlays().add(this.mCompassOverlay);
     }
 
+    @SuppressLint("NewApi")
     public void registerLocationListener() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -222,23 +247,40 @@ public class MainActivity extends AppCompatActivity
             alt = location.getAltitude();
             fix = location.getTime();
             accuracy = location.getAccuracy();
-            Toast.makeText(this, "Latitud: " + lat +
-                            ",\nLongitud: " + lon +
-                            "\nAltitud: " + alt +
-                            "\nPrecision: " + accuracy + " m",
-                    Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "No hay localización", Toast.LENGTH_SHORT).show();
-
         }
 
         pos = new GeoPoint(lat, lon);
 
         myMapController.animateTo(pos);
-        myMapController.setZoom(15);
+        positionMarker();
 
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                GeocodeTask task = new GeocodeTask();
+                task.execute(new LatLong(lat, lon));
+            }
+        });
+    }
+
+    public void myPosition() {
+        String _lat = String.format("%.2f", lat);
+        String _lon = String.format("%.2f", lon);
+        String _alt = String.format("%.1f", alt);
+
+        registerLocationListener();
+        Toast.makeText(this, "Latitud: " + _lat +
+                        ",\nLongitud: " + _lon +
+                        "\nAltitud: " + _alt +
+                        "\nPrecisión: " + Math.round(accuracy) + " m",
+                Toast.LENGTH_SHORT).show();
+    }
+
+    public void positionMarker() {
         DefaultResourceProxyImpl resourceProxy = new DefaultResourceProxyImpl(getApplicationContext());
-        OverlayItem myLocationOverlayItem = new OverlayItem("Here", "Current Position", pos);
+        myLocationOverlayItem = new OverlayItem("Here", "Current Position", pos);
         myCurrentLocationMarker = this.getResources().getDrawable(R.drawable.point);
         myLocationOverlayItem.setMarker(myCurrentLocationMarker);
         final ArrayList<OverlayItem> items = new ArrayList<>();
@@ -253,19 +295,11 @@ public class MainActivity extends AppCompatActivity
             }
         }, resourceProxy);
         this.myOpenMapView.getOverlays().add(currentLocationOverlay);
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                GeocodeTask task = new GeocodeTask();
-                task.execute(new LatLong(lat, lon));
-            }
-        });
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        myCurrentLocationMarker.setVisible(false, true);
+        myOpenMapView.getOverlays().clear();
         registerLocationListener();
     }
 
@@ -275,24 +309,24 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onProviderEnabled(String s) {
-        Toast.makeText(this, "La señal GPS está disponible", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "La señal GPS está disponible", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onProviderDisabled(String s) {
-        Toast.makeText(this, "La señal GPS se ha desactivado", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "La señal GPS se ha desactivado", Toast.LENGTH_SHORT).show();
     }
 
+    @SuppressLint({"NewApi", "StaticFieldLeak"})
     protected class GeocodeTask extends AsyncTask<LatLong, Void, String> {
         @Override
         protected String doInBackground(LatLong... params) {
             Geocoder gc = new Geocoder(getApplicationContext(), Locale.getDefault());
-            List<Address> addresslist = null;
+            List<Address> addresslist;
             StringBuffer returnString = new StringBuffer();
 
             try {
                 addresslist = gc.getFromLocation(lat, lon, 3);
-
                 if (addresslist == null) {
                     return "Unknown Address";
                 } else {
@@ -316,27 +350,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void dispatchTakePictureIntent() throws IOException {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            createImageFile();
-        }
-    }
-
-    private void createImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "PhT_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,
-                ".jpeg",
-                storageDir
-        );
-
-        String currentPhoto = image.getAbsolutePath();
-    }
-
     private void tracking() {
         //To-do: Código para grabar recorrido
     }
@@ -349,4 +362,79 @@ public class MainActivity extends AppCompatActivity
             this.lon = lon;
         }
     }
+    // Fin métodos para mapas y track
+    // ----------------------------------------------------------------------------------------------------------------
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Métodos para fotos georreferenciadas
+    private String getAlbumName() {
+        return getString(R.string.album_name);
+    }
+
+    private File getAlbumDir() {
+        File storageDir = null;
+
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+
+            storageDir = mAlbumStorageDirFactory.getAlbumStorageDir(getAlbumName());
+
+            if (storageDir != null) {
+                if (!storageDir.mkdirs()) {
+                    if (!storageDir.exists()) {
+                        Log.d("CameraSample", "failed to create directory");
+                        return null;
+                    }
+                }
+            }
+
+        } else {
+            Log.v(getString(R.string.app_name), "External storage is not mounted READ/WRITE.");
+        }
+
+        return storageDir;
+    }
+
+    private File createImageFile() throws IOException {
+        //To-do: guardar la foto en la BBDD cuando esté implementada
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_";
+        File albumF = getAlbumDir();
+        File imageF = File.createTempFile(imageFileName, JPEG_FILE_SUFFIX, albumF);
+        return imageF;
+    }
+
+    private File setUpPhotoFile() throws IOException {
+        File f = createImageFile();
+        mCurrentPhotoPath = f.getAbsolutePath();
+
+        return f;
+    }
+
+    private void dispatchTakePictureIntent(int actionCode) {
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        switch (actionCode) {
+            case ACTION_TAKE_PHOTO_B:
+                File f = null;
+
+                try {
+                    f = setUpPhotoFile();
+                    mCurrentPhotoPath = f.getAbsolutePath();
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    f = null;
+                    mCurrentPhotoPath = null;
+                }
+                break;
+
+            default:
+                break;
+        } // switch
+
+        startActivityForResult(takePictureIntent, actionCode);
+    }
+    // Fin métodos fotos georreferenciadas
+    // ----------------------------------------------------------------------------------------------------------------
 }
