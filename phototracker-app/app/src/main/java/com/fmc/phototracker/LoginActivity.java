@@ -63,6 +63,7 @@ public class LoginActivity extends AppCompatActivity {
                     login = true;
                     Intent mainIntent = new Intent().setClass(
                             LoginActivity.this, MainActivity.class);
+                    mainIntent.putExtra("login", login);
                     startActivity(mainIntent);
                     finish();
                 }
@@ -111,6 +112,7 @@ public class LoginActivity extends AppCompatActivity {
                 login = false;
                 Intent mainIntent = new Intent().setClass(
                         LoginActivity.this, MainActivity.class);
+                mainIntent.putExtra("login", login);
                 startActivity(mainIntent);
                 finish();
             }

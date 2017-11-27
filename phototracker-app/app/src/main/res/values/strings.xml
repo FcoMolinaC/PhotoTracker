@@ -20,4 +20,5 @@
     <string name="userloged">fmolinacdev@gmail.com</string>
     <string name="appName">PhotoTracker</string>
     <string name="album_name">phototrack</string>
+    <string name="exit">Salir</string>
 </resources>

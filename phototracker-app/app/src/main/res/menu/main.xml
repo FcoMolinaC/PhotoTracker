@@ -4,6 +4,6 @@
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
-        android:title="Opciones"
+        android:title="@string/exit"
         app:showAsAction="never" />
 </menu>

@@ -55,6 +55,8 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
 
+    Boolean login;
+
     MapView myOpenMapView;
     IMapController myMapController;
     CompassOverlay mCompassOverlay;
@@ -73,7 +75,6 @@ public class MainActivity extends AppCompatActivity
     private static final String JPEG_FILE_SUFFIX = ".jpg";
     private static final int ACTION_TAKE_PHOTO_B = 1;
     private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
-
     private String mCurrentPhotoPath;
 
     Drawable myCurrentLocationMarker;
@@ -85,6 +86,9 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        Bundle bundle = getIntent().getExtras();
+        login = bundle.getBoolean("login");
+
         mAlbumStorageDirFactory = new BaseAlbumDirFactory();
 
         initializeMap();
@@ -95,19 +99,23 @@ public class MainActivity extends AppCompatActivity
         fabTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    if (accuracy <= 10.0) {
-                        //To-do: código para comenzar a grabar el recorrido
-                        tracking();
-                        Snackbar.make(view, "Comenzando a grabar recorrido", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
+                if (login) {
+                    if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                        if (accuracy <= 10.0) {
+                            //To-do: código para comenzar a grabar el recorrido
+                            tracking();
+                            Snackbar.make(view, "Comenzando a grabar recorrido", Snackbar.LENGTH_LONG)
+                                    .setAction("Action", null).show();
+                        } else {
+                            Snackbar.make(view, "No hay precisión suficiente para grabar un recorrido", Snackbar.LENGTH_LONG)
+                                    .setAction("Action", null).show();
+                        }
                     } else {
-                        Snackbar.make(view, "No hay precisión suficiente para grabar un recorrido", Snackbar.LENGTH_LONG)
+                        Snackbar.make(view, "GPS desactivado. Actívalo para comenzar a grabar recorrido", Snackbar.LENGTH_LONG)
                                 .setAction("Action", null).show();
                     }
                 } else {
-                    Snackbar.make(view, "GPS desactivado. Actívalo para comenzar a grabar recorrido", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
+                    Toast.makeText(MainActivity.this, "Regístrate para poder crear rutas", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -124,8 +132,13 @@ public class MainActivity extends AppCompatActivity
         fabPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                if (login) {
+                    Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                    startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                } else {
+                    Toast.makeText(MainActivity.this, "Regístrate y podrás subir fotos", Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
 
@@ -166,7 +179,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            return true;
+            finish();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -176,15 +189,23 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.routes) {
-
+            if (login) {
+                //To-do: cargar las rutas del usuario cuando esté disponible la BBDD
+            } else {
+                Toast.makeText(this, "Regístrate y podrás ver tus rutas", Toast.LENGTH_SHORT).show();
+            }
         } else if (id == R.id.nav_gallery) {
-
+            if (login) {
+                //To-do: mostrar las fotos del usuario cuando esté disponible la BBDD
+            } else {
+                Toast.makeText(this, "Regístrate y podrás ver tus fotos", Toast.LENGTH_SHORT).show();
+            }
         } else if (id == R.id.nav_explore) {
-
+            //To-do: cargar las rutas públicas cuando estén disponibles
         } else if (id == R.id.nav_share) {
-
+            //To-do: Compartir foto cuando esté disponible la BBDD
         } else if (id == R.id.nav_send) {
-
+            //To-do: Enviar foto cuando esté disponible la BBDD
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
