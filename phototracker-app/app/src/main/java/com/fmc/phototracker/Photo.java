@@ -1,49 +1,75 @@
 package com.fmc.phototracker;
 
-import java.time.LocalDateTime;
+/**
+ * Created by FMC on 27/11/2017.
+ */
 
-public class Photo {
-    private LocalDateTime time;
-    private String latitude, longitude, description;
-    private boolean photo_public;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-    public LocalDateTime getTime() {
-        return time;
+public class Photo implements Parcelable {
+
+    private String mUrl;
+    private String mTitle;
+
+    public Photo(String url, String title) {
+        mUrl = url;
+        mTitle = title;
     }
 
-    public void setTime(LocalDateTime time) {
-        this.time = time;
+    protected Photo(Parcel in) {
+        mUrl = in.readString();
+        mTitle = in.readString();
     }
 
-    public String getLatitude() {
-        return latitude;
+    public static final Creator<Photo> CREATOR = new Creator<Photo>() {
+        @Override
+        public Photo createFromParcel(Parcel in) {
+            return new Photo(in);
+        }
+
+        @Override
+        public Photo[] newArray(int size) {
+            return new Photo[size];
+        }
+    };
+
+    public String getUrl() {
+        return mUrl;
     }
 
-    public void setLatitude(String latitude) {
-        this.latitude = latitude;
+    public void setUrl(String url) {
+        mUrl = url;
     }
 
-    public String getLongitude() {
-        return longitude;
+    public String getTitle() {
+        return mTitle;
     }
 
-    public void setLongitude(String longitude) {
-        this.longitude = longitude;
+    public void setTitle(String title) {
+        mTitle = title;
     }
 
-    public String getDescription() {
-        return description;
+    public static Photo[] getSpacePhotos() {
+
+        return new Photo[]{
+                new Photo("http://i.imgur.com/zuG2bGQ.jpg", "Galaxy"),
+                new Photo("http://i.imgur.com/ovr0NAF.jpg", "Space Shuttle"),
+                new Photo("http://i.imgur.com/n6RfJX2.jpg", "Galaxy Orion"),
+                new Photo("http://i.imgur.com/qpr5LR2.jpg", "Earth"),
+                new Photo("http://i.imgur.com/pSHXfu5.jpg", "Astronaut"),
+                new Photo("http://i.imgur.com/3wQcZeY.jpg", "Satellite"),
+        };
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
-    public boolean isPhoto_public() {
-        return photo_public;
-    }
-
-    public void setPhoto_public(boolean photo_public) {
-        this.photo_public = photo_public;
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(mUrl);
+        parcel.writeString(mTitle);
     }
 }

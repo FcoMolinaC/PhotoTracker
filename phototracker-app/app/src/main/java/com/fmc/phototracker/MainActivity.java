@@ -197,6 +197,8 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_gallery) {
             if (login) {
                 //To-do: mostrar las fotos del usuario cuando esté disponible la BBDD
+                Intent galleryIntent = new Intent(MainActivity.this, GalleryActivity.class);
+                startActivity(galleryIntent);
             } else {
                 Toast.makeText(this, "Regístrate y podrás ver tus fotos", Toast.LENGTH_SHORT).show();
             }
