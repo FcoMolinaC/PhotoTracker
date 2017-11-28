@@ -26,7 +26,7 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabPosition"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:layout_margin="0dp"
@@ -36,14 +36,14 @@
         android:layout_marginRight="0dp"
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
-        android:tint="@android:color/black"
+        android:tint="@android:color/transparent"
         android:visibility="visible"
-        app:backgroundTint="@android:color/background_light"
-        app:elevation="5dp"
+        app:backgroundTint="@android:color/transparent"
+        app:elevation="0dp"
         app:fabSize="mini"
         app:layout_anchor="@id/fabTrack"
         app:layout_anchorGravity="top"
-        app:srcCompat="@android:drawable/ic_menu_compass" />
+        app:srcCompat="@drawable/logo" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabTrack"
@@ -56,6 +56,18 @@
         app:fabSize="mini"
         app:layout_anchorGravity="bottom|end"
         app:srcCompat="@android:drawable/ic_menu_add" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabRecord"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:backgroundTint="@android:color/holo_red_dark"
+        app:elevation="5dp"
+        app:fabSize="mini"
+        app:layout_anchorGravity="bottom|end"
+        app:srcCompat="@android:drawable/ic_menu_save" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabPhoto"

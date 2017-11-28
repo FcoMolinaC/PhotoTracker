@@ -3,7 +3,9 @@ package com.fmc.phototracker;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
@@ -28,9 +30,12 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.osmdroid.DefaultResourceProxyImpl;
@@ -69,6 +74,7 @@ public class MainActivity extends AppCompatActivity
     float distance = 5;
     GeoPoint pos;
     OverlayItem myLocationOverlayItem;
+    Boolean private_track = false;
 
     private static final int CAMERA_REQUEST = 1888;
     private static final String JPEG_FILE_PREFIX = "IMG_";
@@ -86,6 +92,13 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        final FloatingActionButton fabRecord = findViewById(R.id.fabRecord);
+        final FloatingActionButton fabTrack = findViewById(R.id.fabTrack);
+        final FloatingActionButton fabPosition = findViewById(R.id.fabPosition);
+        final FloatingActionButton fabPhoto = findViewById(R.id.fabPhoto);
+
+        fabRecord.setVisibility(View.INVISIBLE);
+
         Bundle bundle = getIntent().getExtras();
         login = bundle.getBoolean("login");
 
@@ -95,14 +108,15 @@ public class MainActivity extends AppCompatActivity
         registerLocationListener();
         myMapController.setZoom(22);
 
-        FloatingActionButton fabTrack = findViewById(R.id.fabTrack);
         fabTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (login) {
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                        if (accuracy <= 10.0) {
+                        if (accuracy <= 30.0) {
                             //To-do: código para comenzar a grabar el recorrido
+                            fabTrack.setVisibility(View.INVISIBLE);
+                            fabRecord.setVisibility(View.VISIBLE);
                             tracking();
                             Snackbar.make(view, "Comenzando a grabar recorrido", Snackbar.LENGTH_LONG)
                                     .setAction("Action", null).show();
@@ -120,7 +134,6 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        FloatingActionButton fabPosition = findViewById(R.id.fabPosition);
         fabPosition.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -128,7 +141,6 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        FloatingActionButton fabPhoto = findViewById(R.id.fabPhoto);
         fabPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -139,6 +151,13 @@ public class MainActivity extends AppCompatActivity
                     Toast.makeText(MainActivity.this, "Regístrate y podrás subir fotos", Toast.LENGTH_SHORT).show();
                 }
 
+            }
+        });
+
+        fabRecord.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                registerTrack();
             }
         });
 
@@ -375,6 +394,39 @@ public class MainActivity extends AppCompatActivity
 
     private void tracking() {
         //To-do: Código para grabar recorrido
+    }
+
+    private void registerTrack() {
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.register_track, null);
+        final EditText trackName = alertLayout.findViewById(R.id.track_name);
+        final CheckBox trackPrivate = alertLayout.findViewById(R.id.track_private);
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+        alert.setTitle("Guardar ruta");
+        alert.setView(alertLayout);
+        alert.setCancelable(false);
+        alert.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Toast.makeText(getBaseContext(), "Cancelado", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        alert.setPositiveButton("Registrar", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String track_name = trackName.getText().toString();
+                if (trackPrivate.isChecked()) {
+                    private_track = true;
+                }
+                Toast.makeText(getBaseContext(), "¡Ruta grabada!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        AlertDialog dialog = alert.create();
+        dialog.show();
     }
 
     class LatLong {
