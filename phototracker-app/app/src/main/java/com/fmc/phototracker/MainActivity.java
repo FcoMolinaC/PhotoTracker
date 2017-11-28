@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity
     @SuppressLint("NewApi")
     public void registerLocationListener() {
         gpsStatus();
-        
+
         if (location != null) {
             lat = location.getLatitude();
             lon = location.getLongitude();
@@ -418,7 +418,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        alert.setPositiveButton("Registrar", new DialogInterface.OnClickListener() {
+        alert.setPositiveButton("Guardar", new DialogInterface.OnClickListener() {
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
