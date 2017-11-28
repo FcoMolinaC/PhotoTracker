@@ -251,8 +251,7 @@ public class MainActivity extends AppCompatActivity
         myOpenMapView.getOverlays().add(this.mCompassOverlay);
     }
 
-    @SuppressLint("NewApi")
-    public void registerLocationListener() {
+    public void gpsStatus() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         Criteria criteria = new Criteria();
@@ -282,7 +281,12 @@ public class MainActivity extends AppCompatActivity
         } else {
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         }
+    }
 
+    @SuppressLint("NewApi")
+    public void registerLocationListener() {
+        gpsStatus();
+        
         if (location != null) {
             lat = location.getLatitude();
             lon = location.getLongitude();
