@@ -39,6 +39,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".GalleryActivity" />
         <activity android:name=".PhotoActivity" />
+        <activity android:name=".TrackList" />
     </application>
 
 </manifest>

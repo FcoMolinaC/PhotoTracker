@@ -74,6 +74,8 @@ public class MainActivity extends AppCompatActivity
     float distance = 5;
     GeoPoint pos;
     OverlayItem myLocationOverlayItem;
+    Drawable myCurrentLocationMarker;
+
     Boolean private_track = false;
 
     private static final int CAMERA_REQUEST = 1888;
@@ -82,8 +84,6 @@ public class MainActivity extends AppCompatActivity
     private static final int ACTION_TAKE_PHOTO_B = 1;
     private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
     private String mCurrentPhotoPath;
-
-    Drawable myCurrentLocationMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,6 +210,8 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.routes) {
             if (login) {
                 //To-do: cargar las rutas del usuario cuando esté disponible la BBDD
+                Intent trackIntent = new Intent(MainActivity.this, TrackList.class);
+                startActivity(trackIntent);
             } else {
                 Toast.makeText(this, "Regístrate y podrás ver tus rutas", Toast.LENGTH_SHORT).show();
             }
@@ -431,6 +433,10 @@ public class MainActivity extends AppCompatActivity
         });
         AlertDialog dialog = alert.create();
         dialog.show();
+    }
+
+    public void listTrack() {
+
     }
 
     class LatLong {
