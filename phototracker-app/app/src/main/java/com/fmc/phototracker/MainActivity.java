@@ -75,8 +75,10 @@ public class MainActivity extends AppCompatActivity
     GeoPoint pos;
     OverlayItem myLocationOverlayItem;
     Drawable myCurrentLocationMarker;
+    Boolean tracking = false;
 
     Boolean private_track = false;
+    ArrayList<GeoPoint> track = new ArrayList<>();
 
     private static final int CAMERA_REQUEST = 1888;
     private static final String JPEG_FILE_PREFIX = "IMG_";
@@ -85,6 +87,8 @@ public class MainActivity extends AppCompatActivity
     private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
     private String mCurrentPhotoPath;
 
+    private FloatingActionButton fabRecord, fabTrack, fabPosition, fabPhoto;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,10 +96,10 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        final FloatingActionButton fabRecord = findViewById(R.id.fabRecord);
-        final FloatingActionButton fabTrack = findViewById(R.id.fabTrack);
-        final FloatingActionButton fabPosition = findViewById(R.id.fabPosition);
-        final FloatingActionButton fabPhoto = findViewById(R.id.fabPhoto);
+        fabRecord = findViewById(R.id.fabRecord);
+        fabTrack = findViewById(R.id.fabTrack);
+        fabPosition = findViewById(R.id.fabPosition);
+        fabPhoto = findViewById(R.id.fabPhoto);
 
         fabRecord.setVisibility(View.INVISIBLE);
 
@@ -349,6 +353,15 @@ public class MainActivity extends AppCompatActivity
     public void onLocationChanged(Location location) {
         myOpenMapView.getOverlays().clear();
         registerLocationListener();
+        if (tracking) {
+            track.add(pos);
+            //To-do: borrar la tostada en fase de producción
+            Toast.makeText(this, "Punto almacenado\nLatitud: " + pos.getLatitude() +
+                            "\nLongitud: " + pos.getLongitude() +
+                            "\nAltitud: " + pos.getAltitude() +
+                            "\nPrecisión: " + Math.round(accuracy) + " m",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -399,6 +412,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void tracking() {
+        tracking = true;
         //To-do: Código para grabar recorrido
     }
 
@@ -416,6 +430,8 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                tracking = false;
+                fabRecord.setVisibility(View.INVISIBLE);
                 Toast.makeText(getBaseContext(), "Cancelado", Toast.LENGTH_SHORT).show();
             }
         });
@@ -428,6 +444,9 @@ public class MainActivity extends AppCompatActivity
                 if (trackPrivate.isChecked()) {
                     private_track = true;
                 }
+                tracking = false;
+                fabRecord.setVisibility(View.INVISIBLE);
+                fabTrack.setVisibility(View.VISIBLE);
                 Toast.makeText(getBaseContext(), "¡Ruta grabada!", Toast.LENGTH_SHORT).show();
             }
         });
