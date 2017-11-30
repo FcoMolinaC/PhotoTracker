@@ -28,7 +28,7 @@ public class PhotoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_detail);
 
-        mImageView = (ImageView) findViewById(R.id.image);
+        mImageView = findViewById(R.id.image);
         Photo spacePhoto = getIntent().getParcelableExtra(EXTRA_SPACE_PHOTO);
 
         Glide.with(this)

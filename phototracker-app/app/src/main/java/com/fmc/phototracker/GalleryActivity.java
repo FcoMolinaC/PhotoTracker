@@ -25,7 +25,7 @@ public class GalleryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_space_gallery);
 
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, 2);
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.rv_images);
+        RecyclerView recyclerView = findViewById(R.id.rv_images);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
 
@@ -73,7 +73,7 @@ public class GalleryActivity extends AppCompatActivity {
             public MyViewHolder(View itemView) {
 
                 super(itemView);
-                mPhotoImageView = (ImageView) itemView.findViewById(R.id.iv_photo);
+                mPhotoImageView = itemView.findViewById(R.id.iv_photo);
                 itemView.setOnClickListener(this);
             }
 

@@ -40,6 +40,7 @@
         <activity android:name=".GalleryActivity" />
         <activity android:name=".PhotoActivity" />
         <activity android:name=".TrackList" />
+        <activity android:name=".TrackMap" />
     </application>
 
 </manifest>

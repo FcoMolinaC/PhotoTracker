@@ -1,12 +1,12 @@
 package com.fmc.phototracker;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -48,10 +48,11 @@ public class TrackList extends Activity {
         tracklist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ListEntries select = (ListEntries) parent.getItemAtPosition(position);
+                //ListEntries select = (ListEntries) parent.getItemAtPosition(position);
 
-                //To-do: volver a pantalla anterior y mostrar el track en el mapa. Eliminar la tostada de prueba
-                Toast.makeText(TrackList.this, "" + select, Toast.LENGTH_SHORT).show();
+                //To-do: mostrar el track en el mapa. Pasa la info como bundle
+                Intent trackmapIntent = new Intent(TrackList.this, TrackMap.class);
+                startActivity(trackmapIntent);
             }
         });
     }

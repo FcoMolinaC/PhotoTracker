@@ -314,13 +314,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void myPosition() {
-        String _lat = String.format("%.2f", lat);
-        String _lon = String.format("%.2f", lon);
+        String _lat = String.format("%.4f", lat);
+        String _lon = String.format("%.4f", lon);
         String _alt = String.format("%.1f", alt);
 
         registerLocationListener();
         Toast.makeText(this, "Latitud: " + _lat +
-                        ",\nLongitud: " + _lon +
+                        "\nLongitud: " + _lon +
                         "\nAltitud: " + _alt +
                         "\nPrecisión: " + Math.round(accuracy) + " m",
                 Toast.LENGTH_SHORT).show();
@@ -433,10 +433,6 @@ public class MainActivity extends AppCompatActivity
         });
         AlertDialog dialog = alert.create();
         dialog.show();
-    }
-
-    public void listTrack() {
-
     }
 
     class LatLong {
