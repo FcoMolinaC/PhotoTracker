@@ -86,7 +86,6 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Toast.makeText(getBaseContext(), "Cancelado", Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -96,7 +95,13 @@ public class LoginActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         String user = etUsername.getText().toString();
                         String pass = etEmail.getText().toString();
-                        Toast.makeText(getBaseContext(), "Usuario: " + user + " Contraseña: " + pass, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getBaseContext(), "Registro completo", Toast.LENGTH_SHORT).show();
+                        login = true;
+                        Intent mainIntent = new Intent().setClass(
+                                LoginActivity.this, MainActivity.class);
+                        mainIntent.putExtra("login", login);
+                        startActivity(mainIntent);
+                        finish();
                     }
                 });
                 AlertDialog dialog = alert.create();

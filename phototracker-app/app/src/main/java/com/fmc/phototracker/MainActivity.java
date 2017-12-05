@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity
                                 .setAction("Action", null).show();
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "Regístrate para poder crear rutas", Toast.LENGTH_SHORT).show();
+                    registerRequest();
                 }
             }
         });
@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(cameraIntent, CAMERA_REQUEST);
                 } else {
-                    Toast.makeText(MainActivity.this, "Regístrate y podrás subir fotos", Toast.LENGTH_SHORT).show();
+                    registerRequest();
                 }
 
             }
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity
                 Intent trackIntent = new Intent(MainActivity.this, TrackList.class);
                 startActivity(trackIntent);
             } else {
-                Toast.makeText(this, "Regístrate y podrás ver tus rutas", Toast.LENGTH_SHORT).show();
+                registerRequest();
             }
         } else if (id == R.id.nav_gallery) {
             if (login) {
@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity
                 Intent galleryIntent = new Intent(MainActivity.this, GalleryActivity.class);
                 startActivity(galleryIntent);
             } else {
-                Toast.makeText(this, "Regístrate y podrás ver tus fotos", Toast.LENGTH_SHORT).show();
+                registerRequest();
             }
         } else if (id == R.id.nav_explore) {
             //To-do: cargar las rutas públicas cuando estén disponibles
@@ -238,6 +238,37 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void registerRequest() {
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.register_dialog, null);
+        final EditText etUsername = alertLayout.findViewById(R.id.username);
+        final EditText etEmail = alertLayout.findViewById(R.id.password);
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+        alert.setTitle("Regístrate y podrás grabar rutas y subir fotos");
+        alert.setView(alertLayout);
+        alert.setCancelable(false);
+        alert.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+
+        alert.setPositiveButton("Registrar", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String user = etUsername.getText().toString();
+                String pass = etEmail.getText().toString();
+                Toast.makeText(getBaseContext(), "Registro completo", Toast.LENGTH_SHORT).show();
+                login = true;
+            }
+        });
+        AlertDialog dialog = alert.create();
+        dialog.show();
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -255,66 +286,6 @@ public class MainActivity extends AppCompatActivity
         mCompassOverlay = new CompassOverlay(ctx, new InternalCompassOrientationProvider(ctx), myOpenMapView);
         mCompassOverlay.enableCompass();
         myOpenMapView.getOverlays().add(this.mCompassOverlay);
-    }
-
-    public void gpsStatus() {
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-        criteria.setPowerRequirement(Criteria.POWER_LOW);
-        criteria.setAltitudeRequired(false);
-        criteria.setBearingRequired(false);
-        criteria.setSpeedRequired(false);
-        criteria.setCostAllowed(false);
-        criteria.setHorizontalAccuracy(Criteria.ACCURACY_LOW);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        assert locationManager != null;
-
-        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, time, distance, this);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, time, distance, this);
-        if (locationManager.getAllProviders().contains("network")) {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, time, distance, this);
-        }
-
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        } else {
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        }
-    }
-
-    @SuppressLint("NewApi")
-    public void registerLocationListener() {
-        gpsStatus();
-
-        if (location != null) {
-            lat = location.getLatitude();
-            lon = location.getLongitude();
-            alt = location.getAltitude();
-            fix = location.getTime();
-            accuracy = location.getAccuracy();
-        } else {
-            Toast.makeText(this, "No hay localización", Toast.LENGTH_SHORT).show();
-        }
-
-        pos = new GeoPoint(lat, lon);
-
-        myMapController.animateTo(pos);
-        positionMarker();
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                GeocodeTask task = new GeocodeTask();
-                task.execute(new LatLong(lat, lon));
-            }
-        });
     }
 
     public void myPosition() {
@@ -347,6 +318,62 @@ public class MainActivity extends AppCompatActivity
             }
         }, resourceProxy);
         this.myOpenMapView.getOverlays().add(currentLocationOverlay);
+    }
+
+    @SuppressLint("NewApi")
+    public void registerLocationListener() {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+        criteria.setPowerRequirement(Criteria.POWER_LOW);
+        criteria.setAltitudeRequired(false);
+        criteria.setBearingRequired(false);
+        criteria.setSpeedRequired(false);
+        criteria.setCostAllowed(false);
+        criteria.setHorizontalAccuracy(Criteria.ACCURACY_LOW);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        assert locationManager != null;
+
+        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, time, distance, this);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, time, distance, this);
+        if (locationManager.getAllProviders().contains("network")) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, time, distance, this);
+        }
+
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        } else {
+            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
+
+        if (location != null) {
+            lat = location.getLatitude();
+            lon = location.getLongitude();
+            alt = location.getAltitude();
+            fix = location.getTime();
+            accuracy = location.getAccuracy();
+        } else {
+            Toast.makeText(this, "No hay localización", Toast.LENGTH_SHORT).show();
+        }
+
+        pos = new GeoPoint(lat, lon);
+
+        myMapController.animateTo(pos);
+        positionMarker();
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                GeocodeTask task = new GeocodeTask();
+                task.execute(new LatLong(lat, lon));
+            }
+        });
     }
 
     @Override
@@ -432,6 +459,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 tracking = false;
                 fabRecord.setVisibility(View.INVISIBLE);
+                fabTrack.setVisibility(View.VISIBLE);
                 Toast.makeText(getBaseContext(), "Cancelado", Toast.LENGTH_SHORT).show();
             }
         });
