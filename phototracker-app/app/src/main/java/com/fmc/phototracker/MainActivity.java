@@ -161,7 +161,8 @@ public class MainActivity extends AppCompatActivity
         fabRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                registerTrack();
+                tracking = false;
+                //registerTrack();
             }
         });
 
@@ -439,7 +440,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void tracking() {
-        tracking = true;
         //To-do: Código para grabar recorrido
     }
 
