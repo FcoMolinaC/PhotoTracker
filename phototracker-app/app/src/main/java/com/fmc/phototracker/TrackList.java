@@ -10,10 +10,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-/**
- * Created by FMC on 29/11/2017.
- */
-
 public class TrackList extends Activity {
 
     private ListView tracklist;
