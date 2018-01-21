@@ -20,46 +20,16 @@ import java.util.List;
 
 public class Database {
 
-    private String username, password, resultText;
+    private String resultText;
     private int position = 0;
     private List<User> UserList = null;
-    boolean result = false;
+    private boolean result = false;
 
     private final static String URL_SERVIDOR = "";
     // URL del directorio de los scripts php del servidor
     private final static String URL_PHP = "http://" + URL_SERVIDOR + "/phototrack/";
 
-    private boolean insertar() {
-        boolean result = false;
-
-        HttpClient httpclient;
-        List<NameValuePair> parametros_POST;
-        HttpPost httppost;
-        httpclient = new DefaultHttpClient();
-        httppost = new HttpPost(URL_PHP + "insert.php"); // Url del Servidor
-
-        parametros_POST = new ArrayList<NameValuePair>(4);
-        parametros_POST.add(new BasicNameValuePair("username", username.trim()));
-        parametros_POST.add(new BasicNameValuePair("password", password.trim()));
-        try {
-            httppost.setEntity(new UrlEncodedFormEntity(parametros_POST));
-            httpclient.execute(httppost);
-            result = true;
-        } catch (UnsupportedEncodingException e) {
-            result = false;
-            e.printStackTrace();
-        } catch (ClientProtocolException e) {
-            result = false;
-            e.printStackTrace();
-        } catch (IOException e) {
-            result = false;
-            e.printStackTrace();
-        }
-        return result;
-
-    }
-
-    private boolean insert() {
+    public boolean insert(String username, String password) {
         HttpClient httpclient;
         List<NameValuePair> parametros_POST;
         HttpPost httppost;
@@ -87,7 +57,7 @@ public class Database {
         return result;
     }
 
-    private boolean delete() {
+    public boolean delete(String username) {
         HttpClient httpclient;
         List<NameValuePair> parametros_POST;
         HttpPost httppost;
@@ -96,8 +66,8 @@ public class Database {
 
         parametros_POST = new ArrayList<NameValuePair>();
 
-        User username = UserList.get(position);
-        String id = String.valueOf(username.getId());
+        User user = UserList.get(position);
+        String id = String.valueOf(user.getId());
         parametros_POST.add(new BasicNameValuePair("id", id));
 
         try {
@@ -117,7 +87,7 @@ public class Database {
         return result;
     }
 
-    private boolean update() {
+    public boolean update(String username, String password) {
         HttpClient httpclient;
         List<NameValuePair> parametros_POST;
         HttpPost httppost;
@@ -128,8 +98,8 @@ public class Database {
         parametros_POST.add(new BasicNameValuePair("username", username.trim()));
         parametros_POST.add(new BasicNameValuePair("password", password.trim()));
 
-        User username = UserList.get(position);
-        String id = String.valueOf(username.getId());
+        User user = UserList.get(position);
+        String id = String.valueOf(user.getId());
         parametros_POST.add(new BasicNameValuePair("id", id));
 
         try {
@@ -148,6 +118,34 @@ public class Database {
         }
         return result;
 
+    }
+
+    public boolean login(String username, String password) {
+        HttpClient httpclient;
+        List<NameValuePair> parametros_POST;
+        HttpPost httppost;
+        httpclient = new DefaultHttpClient();
+        httppost = new HttpPost(URL_PHP + "login.php");
+
+        parametros_POST = new ArrayList<NameValuePair>(4);
+        parametros_POST.add(new BasicNameValuePair("username", username.trim()));
+        parametros_POST.add(new BasicNameValuePair("password", password.trim()));
+
+        try {
+            httppost.setEntity(new UrlEncodedFormEntity(parametros_POST));
+            httpclient.execute(httppost);
+            result = true;
+        } catch (UnsupportedEncodingException e) {
+            result = false;
+            e.printStackTrace();
+        } catch (ClientProtocolException e) {
+            result = false;
+            e.printStackTrace();
+        } catch (IOException e) {
+            result = false;
+            e.printStackTrace();
+        }
+        return result;
     }
 
     private String convertStreamToString(InputStream is) throws IOException {

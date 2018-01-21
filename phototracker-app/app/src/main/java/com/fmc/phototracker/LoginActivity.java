@@ -18,6 +18,7 @@ import android.widget.Toast;
 public class LoginActivity extends AppCompatActivity {
 
     boolean login;
+    Database User = new Database();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,14 +59,19 @@ public class LoginActivity extends AppCompatActivity {
                 } else if (password.matches("")) {
                     Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña", Toast.LENGTH_SHORT).show();
                 } else {
-                    //ToDo: Comprobar con base de datos cuando esté implementado
-                    //ToDo: Crear sentencia de control para acceder al menú personal
-                    login = true;
-                    Intent mainIntent = new Intent().setClass(
-                            LoginActivity.this, MainActivity.class);
-                    mainIntent.putExtra("login", login);
-                    startActivity(mainIntent);
-                    finish();
+                    User.login(username, password);
+                    if (User.login(username, password)) {
+                        login = true;
+                        Intent mainIntent = new Intent().setClass(
+                                LoginActivity.this, MainActivity.class);
+                        mainIntent.putExtra("login", login);
+                        startActivity(mainIntent);
+                        finish();
+                    } else {
+                        Toast.makeText(LoginActivity.this,
+                                "No se ha podido iniciar sesión o el usuario no existe\ninténtalo de nuevo más tarde",
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
@@ -93,15 +99,21 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String user = etUsername.getText().toString();
-                        String pass = etEmail.getText().toString();
-                        Toast.makeText(getBaseContext(), "Registro completo", Toast.LENGTH_SHORT).show();
-                        login = true;
-                        Intent mainIntent = new Intent().setClass(
-                                LoginActivity.this, MainActivity.class);
-                        mainIntent.putExtra("login", login);
-                        startActivity(mainIntent);
-                        finish();
+                        String username = etUsername.getText().toString();
+                        String password = etEmail.getText().toString();
+                        User.insert(username, password);
+                        if (User.insert(username, password)) {
+                            Toast.makeText(getBaseContext(), "Registro completo", Toast.LENGTH_SHORT).show();
+                            login = true;
+                            Intent mainIntent = new Intent().setClass(
+                                    LoginActivity.this, MainActivity.class);
+                            mainIntent.putExtra("login", login);
+                            startActivity(mainIntent);
+                            finish();
+                        } else {
+                            Toast.makeText(getBaseContext(), "El registro no se ha completado\ninténtalo de nuevo más tarde",
+                                    Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
                 AlertDialog dialog = alert.create();
@@ -112,8 +124,6 @@ public class LoginActivity extends AppCompatActivity {
         button_explore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //ToDo: Comprobar con base de datos cuando esté implementado
-                //ToDo: Crear sentencia de control para acceder al menú personal
                 login = false;
                 Intent mainIntent = new Intent().setClass(
                         LoginActivity.this, MainActivity.class);
