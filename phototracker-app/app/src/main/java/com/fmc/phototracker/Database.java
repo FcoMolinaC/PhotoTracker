@@ -21,47 +21,17 @@ import java.util.List;
 
 public class Database {
 
-    private HttpClient httpclient;
-    private List<NameValuePair> param_POST;
-    private HttpPost httppost;
+    private static HttpClient httpclient;
+    private static List<NameValuePair> param_POST;
+    private static HttpPost httppost;
 
     private String resultText;
     private int position = 0;
     private List<User> UserList = null;
-    private boolean result = false;
+    private static boolean result = false;
 
     private final static String URL_SERVIDOR = "192.168.0.12";
     private final static String URL_PHP = "http://" + URL_SERVIDOR + "/phototrack/";
-
-    public boolean insert(String username, String password) {
-        httpclient = new DefaultHttpClient();
-        httppost = new HttpPost(URL_PHP + "insert.php");
-
-        param_POST = new ArrayList<NameValuePair>(4);
-        param_POST.add(new BasicNameValuePair("username", username.trim()));
-        param_POST.add(new BasicNameValuePair("password", password.trim()));
-
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    httppost.setEntity(new UrlEncodedFormEntity(param_POST));
-                    httpclient.execute(httppost);
-                    result = true;
-                } catch (UnsupportedEncodingException e) {
-                    result = false;
-                    e.printStackTrace();
-                } catch (ClientProtocolException e) {
-                    result = false;
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    result = false;
-                    e.printStackTrace();
-                }
-            }
-        });
-        return result;
-    }
 
     public boolean delete(String username) {
         httpclient = new DefaultHttpClient();
@@ -128,36 +98,6 @@ public class Database {
         });
         return result;
 
-    }
-
-    public boolean login(String username, String password) {
-        httpclient = new DefaultHttpClient();
-        httppost = new HttpPost(URL_PHP + "login.php");
-
-        param_POST = new ArrayList<NameValuePair>(4);
-        param_POST.add(new BasicNameValuePair("username", username.trim()));
-        param_POST.add(new BasicNameValuePair("password", password.trim()));
-
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    httppost.setEntity(new UrlEncodedFormEntity(param_POST));
-                    httpclient.execute(httppost);
-                    result = true;
-                } catch (UnsupportedEncodingException e) {
-                    result = false;
-                    e.printStackTrace();
-                } catch (ClientProtocolException e) {
-                    result = false;
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    result = false;
-                    e.printStackTrace();
-                }
-            }
-        });
-        return result;
     }
 
     private String convertStreamToString(InputStream is) throws IOException {

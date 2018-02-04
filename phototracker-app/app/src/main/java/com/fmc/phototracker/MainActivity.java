@@ -38,6 +38,13 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -51,6 +58,7 @@ import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -88,6 +96,13 @@ public class MainActivity extends AppCompatActivity
     private String mCurrentPhotoPath;
 
     private FloatingActionButton fabRecord, fabTrack, fabPosition, fabPhoto;
+
+    private static HttpClient httpclient;
+    private static List<NameValuePair> param_POST;
+    private static HttpPost httppost;
+
+    private final static String URL_SERVIDOR = "192.168.0.12";
+    private final static String URL_PHP = "http://" + URL_SERVIDOR + "/phototrack/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -490,6 +505,71 @@ public class MainActivity extends AppCompatActivity
             this.lon = lon;
         }
     }
+
+    public boolean uploadTrack() {
+        boolean result;
+        httpclient = new DefaultHttpClient();
+        httppost = new HttpPost(URL_PHP + "uploadTrack.php");
+
+        param_POST = new ArrayList<NameValuePair>(2);
+        param_POST.add(new BasicNameValuePair("id", ""));
+        param_POST.add(new BasicNameValuePair("user", ""));
+
+        try {
+            httppost.setEntity(new UrlEncodedFormEntity(param_POST));
+            httpclient.execute(httppost);
+            result = true;
+        } catch (UnsupportedEncodingException e) {
+            result = false;
+            e.printStackTrace();
+            Log.d("error ", String.valueOf(e));
+        } catch (ClientProtocolException e) {
+            result = false;
+            e.printStackTrace();
+            Log.d("error ", String.valueOf(e));
+        } catch (IOException e) {
+            result = false;
+            e.printStackTrace();
+            Log.d("error ", String.valueOf(e));
+        }
+        return result;
+    }
+
+    class WebService_uploadTrack extends AsyncTask<String, String, String> {
+        private Activity context;
+
+        WebService_uploadTrack(Activity context) {
+            this.context = context;
+        }
+
+        protected void onPreExecute() {
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            String result;
+
+            if (uploadPhoto())
+                result = "OK";
+            else
+                result = "ERROR";
+            return result;
+        }
+
+        protected void onPostExecute(String result) {
+            if (result.equals("OK")) {
+                Toast.makeText(context, "Ruta guardada", Toast.LENGTH_SHORT).show();
+                login = true;
+                Intent mainIntent = new Intent().setClass(
+                        MainActivity.this, MainActivity.class);
+                mainIntent.putExtra("login", login);
+                startActivity(mainIntent);
+                finish();
+            } else
+                Toast.makeText(context, "Error, no se ha podido guardar la ruta", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     // Fin métodos para mapas y track
     // ----------------------------------------------------------------------------------------------------------------
 
@@ -523,7 +603,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private File createImageFile() throws IOException {
-        //To-do: guardar la foto en la BBDD cuando esté implementada
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_";
         File albumF = getAlbumDir();
@@ -562,6 +641,70 @@ public class MainActivity extends AppCompatActivity
         } // switch
 
         startActivityForResult(takePictureIntent, actionCode);
+    }
+    
+    public boolean uploadPhoto() {
+        boolean result;
+        httpclient = new DefaultHttpClient();
+        httppost = new HttpPost(URL_PHP + "uploadPhoto.php");
+
+        param_POST = new ArrayList<NameValuePair>(2);
+        param_POST.add(new BasicNameValuePair("id", ""));
+        param_POST.add(new BasicNameValuePair("user", ""));
+
+        try {
+            httppost.setEntity(new UrlEncodedFormEntity(param_POST));
+            httpclient.execute(httppost);
+            result = true;
+        } catch (UnsupportedEncodingException e) {
+            result = false;
+            e.printStackTrace();
+            Log.d("error ", String.valueOf(e));
+        } catch (ClientProtocolException e) {
+            result = false;
+            e.printStackTrace();
+            Log.d("error ", String.valueOf(e));
+        } catch (IOException e) {
+            result = false;
+            e.printStackTrace();
+            Log.d("error ", String.valueOf(e));
+        }
+        return result;
+    }
+
+    class WebService_uploadPhoto extends AsyncTask<String, String, String> {
+        private Activity context;
+
+        WebService_uploadPhoto(Activity context) {
+            this.context = context;
+        }
+
+        protected void onPreExecute() {
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            String result;
+
+            if (uploadPhoto())
+                result = "OK";
+            else
+                result = "ERROR";
+            return result;
+        }
+
+        protected void onPostExecute(String result) {
+            if (result.equals("OK")) {
+                Toast.makeText(context, "Fotografía guardada", Toast.LENGTH_SHORT).show();
+                login = true;
+                Intent mainIntent = new Intent().setClass(
+                        MainActivity.this, MainActivity.class);
+                mainIntent.putExtra("login", login);
+                startActivity(mainIntent);
+                finish();
+            } else
+                Toast.makeText(context, "Error, no se ha podido guardar la foto", Toast.LENGTH_SHORT).show();
+        }
     }
     // Fin métodos fotos georreferenciadas
     // ----------------------------------------------------------------------------------------------------------------
