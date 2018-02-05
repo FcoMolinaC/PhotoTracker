@@ -509,7 +509,7 @@ public class MainActivity extends AppCompatActivity
     public boolean uploadTrack() {
         boolean result;
         httpclient = new DefaultHttpClient();
-        httppost = new HttpPost(URL_PHP + "uploadTrack.php");
+        httppost = new HttpPost(URL_PHP + "upload-track.php");
 
         param_POST = new ArrayList<NameValuePair>(2);
         param_POST.add(new BasicNameValuePair("id", ""));
@@ -642,11 +642,11 @@ public class MainActivity extends AppCompatActivity
 
         startActivityForResult(takePictureIntent, actionCode);
     }
-    
+
     public boolean uploadPhoto() {
         boolean result;
         httpclient = new DefaultHttpClient();
-        httppost = new HttpPost(URL_PHP + "uploadPhoto.php");
+        httppost = new HttpPost(URL_PHP + "upload-photo.php");
 
         param_POST = new ArrayList<NameValuePair>(2);
         param_POST.add(new BasicNameValuePair("id", ""));
