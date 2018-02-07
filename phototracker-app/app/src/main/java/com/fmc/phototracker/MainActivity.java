@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Criteria;
@@ -36,6 +38,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import org.apache.http.NameValuePair;
@@ -91,7 +94,9 @@ public class MainActivity extends AppCompatActivity
     private static final int CAMERA_REQUEST = 1888;
     private static final String JPEG_FILE_PREFIX = "IMG_";
     private static final String JPEG_FILE_SUFFIX = ".jpg";
-    private static final int ACTION_TAKE_PHOTO_B = 1;
+    private static final int ACTION_TAKE_PHOTO = 1;
+    private ImageView mImageView;
+    private Bitmap mImageBitmap;
     private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
     private String mCurrentPhotoPath;
 
@@ -192,8 +197,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
-            dispatchTakePictureIntent(ACTION_TAKE_PHOTO_B);
+        /*if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+            dispatchTakePictureIntent(ACTION_TAKE_PHOTO);
+        }*/
+        switch (requestCode) {
+            case ACTION_TAKE_PHOTO: {
+                if (resultCode == RESULT_OK) {
+                    handleBigCameraPhoto();
+                }
+                break;
+            }
         }
     }
 
@@ -569,7 +582,6 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(context, "Error, no se ha podido guardar la ruta", Toast.LENGTH_SHORT).show();
         }
     }
-
     // Fin métodos para mapas y track
     // ----------------------------------------------------------------------------------------------------------------
 
@@ -622,7 +634,7 @@ public class MainActivity extends AppCompatActivity
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         switch (actionCode) {
-            case ACTION_TAKE_PHOTO_B:
+            case ACTION_TAKE_PHOTO:
                 File f = null;
 
                 try {
@@ -638,9 +650,51 @@ public class MainActivity extends AppCompatActivity
 
             default:
                 break;
-        } // switch
+        }
 
         startActivityForResult(takePictureIntent, actionCode);
+    }
+
+    private void handleBigCameraPhoto() {
+        if (mCurrentPhotoPath != null) {
+            setPic();
+            galleryAddPic();
+            mCurrentPhotoPath = null;
+        }
+    }
+
+        private void setPic() {
+
+        int targetW = mImageView.getWidth();
+        int targetH = mImageView.getHeight();
+
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+        
+        int scaleFactor = 1;
+        if ((targetW > 0) || (targetH > 0)) {
+            scaleFactor = Math.min(photoW/targetW, photoH/targetH); 
+        }
+
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        
+        mImageView.setImageBitmap(bitmap);
+        mImageView.setVisibility(View.VISIBLE);
+    }
+
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
+        File f = new File(mCurrentPhotoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
     }
 
     public boolean uploadPhoto() {
