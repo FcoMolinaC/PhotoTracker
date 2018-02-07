@@ -13,7 +13,11 @@
 	$track=$_POST['track'];
 	$private=$_POST['private'];
 
+<<<<<<< HEAD
 	$insert = "INSERT INTO tracks(track,private) VALUES ('".$track."','".$private."')";
+=======
+	$insert = "INSERT INTO photos(track,private) VALUES ('".$track."','".$private."')";
+>>>>>>> 56335eb7cddf510f4467ef5c0dcaa18108a6bd42
 	
 	$query_exec = mysql_query($insert) 
 	or 

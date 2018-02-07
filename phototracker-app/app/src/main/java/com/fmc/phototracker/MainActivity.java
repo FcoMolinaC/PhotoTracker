@@ -654,7 +654,7 @@ public class MainActivity extends AppCompatActivity
 
         startActivityForResult(takePictureIntent, actionCode);
     }
-
+    
     private void handleBigCameraPhoto() {
         if (mCurrentPhotoPath != null) {
             setPic();
