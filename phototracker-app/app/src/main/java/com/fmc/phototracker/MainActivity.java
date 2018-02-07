@@ -9,7 +9,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Criteria;
@@ -17,11 +16,9 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -38,7 +35,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import org.apache.http.NameValuePair;
@@ -60,6 +56,7 @@ import org.osmdroid.views.overlay.compass.CompassOverlay;
 import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
@@ -92,13 +89,6 @@ public class MainActivity extends AppCompatActivity
     ArrayList<GeoPoint> track = new ArrayList<>();
 
     private static final int CAMERA_REQUEST = 1888;
-    private static final String JPEG_FILE_PREFIX = "IMG_";
-    private static final String JPEG_FILE_SUFFIX = ".jpg";
-    private static final int ACTION_TAKE_PHOTO = 1;
-    private ImageView mImageView;
-    private Bitmap mImageBitmap;
-    private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
-    private String mCurrentPhotoPath;
 
     private FloatingActionButton fabRecord, fabTrack, fabPosition, fabPhoto;
 
@@ -125,8 +115,6 @@ public class MainActivity extends AppCompatActivity
 
         Bundle bundle = getIntent().getExtras();
         login = bundle.getBoolean("login");
-
-        mAlbumStorageDirFactory = new BaseAlbumDirFactory();
 
         initializeMap();
         registerLocationListener();
@@ -174,7 +162,6 @@ public class MainActivity extends AppCompatActivity
                 } else {
                     registerRequest();
                 }
-
             }
         });
 
@@ -196,16 +183,47 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        /*if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
-            dispatchTakePictureIntent(ACTION_TAKE_PHOTO);
-        }*/
-        switch (requestCode) {
-            case ACTION_TAKE_PHOTO: {
-                if (resultCode == RESULT_OK) {
-                    handleBigCameraPhoto();
+        if (requestCode == CAMERA_REQUEST) {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            //byte[] photo_data = data.getByteArrayExtra("data");
+
+            File pictureFileDir = getDir();
+
+            if (!pictureFileDir.exists() && !pictureFileDir.mkdirs()) {
+
+                Toast.makeText(this, "Can't create directory to save image.",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmddhhmmss");
+            String date = dateFormat.format(new Date());
+            String photoFile = "Picture_" + date + ".jpg";
+
+            String filename = pictureFileDir.getPath() + File.separator + photoFile;
+
+            File pictureFile = new File(filename);
+
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream(pictureFile);
+                photo.compress(Bitmap.CompressFormat.PNG, 100, out);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (out != null) {
+                        Toast.makeText(this, "New Image saved:" + photoFile,
+                                Toast.LENGTH_LONG).show();
+                        out.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, "Image could not be saved.",
+                            Toast.LENGTH_LONG).show();
                 }
-                break;
             }
         }
     }
@@ -587,115 +605,12 @@ public class MainActivity extends AppCompatActivity
 
     // ----------------------------------------------------------------------------------------------------------------
     // Métodos para fotos georreferenciadas
-    private String getAlbumName() {
-        return getString(R.string.album_name);
+    private File getDir() {
+        File sdDir = Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        return new File(sdDir, "PhotoTrack");
     }
 
-    private File getAlbumDir() {
-        File storageDir = null;
-
-        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-
-            storageDir = mAlbumStorageDirFactory.getAlbumStorageDir(getAlbumName());
-
-            if (storageDir != null) {
-                if (!storageDir.mkdirs()) {
-                    if (!storageDir.exists()) {
-                        Log.d("CameraSample", "failed to create directory");
-                        return null;
-                    }
-                }
-            }
-
-        } else {
-            Log.v(getString(R.string.app_name), "External storage is not mounted READ/WRITE.");
-        }
-
-        return storageDir;
-    }
-
-    private File createImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_";
-        File albumF = getAlbumDir();
-        File imageF = File.createTempFile(imageFileName, JPEG_FILE_SUFFIX, albumF);
-        return imageF;
-    }
-
-    private File setUpPhotoFile() throws IOException {
-        File f = createImageFile();
-        mCurrentPhotoPath = f.getAbsolutePath();
-
-        return f;
-    }
-
-    private void dispatchTakePictureIntent(int actionCode) {
-
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-        switch (actionCode) {
-            case ACTION_TAKE_PHOTO:
-                File f = null;
-
-                try {
-                    f = setUpPhotoFile();
-                    mCurrentPhotoPath = f.getAbsolutePath();
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    f = null;
-                    mCurrentPhotoPath = null;
-                }
-                break;
-
-            default:
-                break;
-        }
-
-        startActivityForResult(takePictureIntent, actionCode);
-    }
-    
-    private void handleBigCameraPhoto() {
-        if (mCurrentPhotoPath != null) {
-            setPic();
-            galleryAddPic();
-            mCurrentPhotoPath = null;
-        }
-    }
-
-        private void setPic() {
-
-        int targetW = mImageView.getWidth();
-        int targetH = mImageView.getHeight();
-
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-        
-        int scaleFactor = 1;
-        if ((targetW > 0) || (targetH > 0)) {
-            scaleFactor = Math.min(photoW/targetW, photoH/targetH); 
-        }
-
-        bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
-
-        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-        
-        mImageView.setImageBitmap(bitmap);
-        mImageView.setVisibility(View.VISIBLE);
-    }
-
-    private void galleryAddPic() {
-        Intent mediaScanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
-        File f = new File(mCurrentPhotoPath);
-        Uri contentUri = Uri.fromFile(f);
-        mediaScanIntent.setData(contentUri);
-        this.sendBroadcast(mediaScanIntent);
-    }
 
     public boolean uploadPhoto() {
         boolean result;
@@ -760,6 +675,6 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(context, "Error, no se ha podido guardar la foto", Toast.LENGTH_SHORT).show();
         }
     }
-    // Fin métodos fotos georreferenciadas
-    // ----------------------------------------------------------------------------------------------------------------
+// Fin métodos fotos georreferenciadas
+// ----------------------------------------------------------------------------------------------------------------
 }
