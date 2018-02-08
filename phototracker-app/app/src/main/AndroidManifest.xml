@@ -34,14 +34,16 @@
         </activity>
         <activity
             android:name=".LoginActivity"
-            android:theme="@style/FullscreenTheme" />
+            android:theme="@style/FullscreenTheme"
+            android:configChanges="orientation|screenSize"/>
         <activity
             android:name=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".GalleryActivity" />
-        <activity android:name=".PhotoActivity" />
-        <activity android:name=".TrackList" />
-        <activity android:name=".TrackMap" />
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation|screenSize" />
+        <activity android:name=".GalleryActivity" android:configChanges="orientation|screenSize" />
+        <activity android:name=".PhotoActivity" android:configChanges="orientation|screenSize" />
+        <activity android:name=".TrackList" android:configChanges="orientation|screenSize" />
+        <activity android:name=".TrackMap" android:configChanges="orientation|screenSize" />
     </application>
 
 </manifest>
