@@ -126,10 +126,9 @@ public class MainActivity extends AppCompatActivity
                 if (login) {
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         if (accuracy <= 30.0) {
-                            //To-do: código para comenzar a grabar el recorrido
+                            tracking = true;
                             fabTrack.setVisibility(View.INVISIBLE);
                             fabRecord.setVisibility(View.VISIBLE);
-                            tracking();
                             Snackbar.make(view, "Comenzando a grabar recorrido", Snackbar.LENGTH_LONG)
                                     .setAction("Action", null).show();
                         } else {
@@ -259,7 +258,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         if (id == R.id.routes) {
             if (login) {
-                //To-do: cargar las rutas del usuario cuando esté disponible la BBDD
+                //todo: cargar las rutas del usuario cuando esté disponible la BBDD
                 Intent trackIntent = new Intent(MainActivity.this, TrackList.class);
                 startActivity(trackIntent);
             } else {
@@ -267,18 +266,23 @@ public class MainActivity extends AppCompatActivity
             }
         } else if (id == R.id.nav_gallery) {
             if (login) {
-                //To-do: mostrar las fotos del usuario cuando esté disponible la BBDD
+                //todo: mostrar las fotos del usuario cuando esté disponible la BBDD
                 Intent galleryIntent = new Intent(MainActivity.this, GalleryActivity.class);
                 startActivity(galleryIntent);
             } else {
                 registerRequest();
             }
         } else if (id == R.id.nav_explore) {
-            //To-do: cargar las rutas públicas cuando estén disponibles
+            //todo: cargar las rutas públicas cuando estén disponibles
         } else if (id == R.id.nav_share) {
-            //To-do: Compartir foto cuando esté disponible la BBDD
+            //todo: Compartir foto cuando esté disponible la BBDD
         } else if (id == R.id.nav_send) {
-            //To-do: Enviar foto cuando esté disponible la BBDD
+            // todo: Añadir la ruta al mensaje cuando esté disponible
+            Intent sendIntent = new Intent();
+            sendIntent.setAction(Intent.ACTION_SEND);
+            sendIntent.putExtra(Intent.EXTRA_TEXT, "Mira mi ruta de Phototrack!");
+            sendIntent.setType("text/plain");
+            startActivity(sendIntent);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -424,17 +428,22 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-        myOpenMapView.getOverlays().clear();
-        registerLocationListener();
+        lat = location.getLatitude();
+        lon = location.getLongitude();
+        pos = new GeoPoint(lat, lon);
+
+        Toast.makeText(this, tracking.toString(), Toast.LENGTH_SHORT).show();
         if (tracking) {
             track.add(pos);
-            //To-do: borrar la tostada en fase de producción
+            //todo: borrar la tostada en fase de producción
             Toast.makeText(this, "Punto almacenado\nLatitud: " + pos.getLatitude() +
                             "\nLongitud: " + pos.getLongitude() +
                             "\nAltitud: " + pos.getAltitude() +
                             "\nPrecisión: " + Math.round(accuracy) + " m",
                     Toast.LENGTH_SHORT).show();
         }
+        myOpenMapView.getOverlays().clear();
+        registerLocationListener();
     }
 
     @Override
@@ -484,10 +493,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void tracking() {
-        //To-do: Código para grabar recorrido
-    }
-
     private void registerTrack() {
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.register_track, null);
@@ -513,14 +518,21 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                tracking = false;
                 String track_name = trackName.getText().toString();
                 if (trackPrivate.isChecked()) {
                     private_track = true;
                 }
-                tracking = false;
                 fabRecord.setVisibility(View.INVISIBLE);
                 fabTrack.setVisibility(View.VISIBLE);
                 Toast.makeText(getBaseContext(), "¡Ruta grabada!", Toast.LENGTH_SHORT).show();
+                //todo: solo para comprobar que se guarda el array
+                for (GeoPoint i : track) {
+                    Toast.makeText(MainActivity.this, String.valueOf(track.size()) + "puntos\nPunto:\n"
+                                    + String.valueOf(i.getLatitude()) +
+                                    "\n" + String.valueOf(i.getLongitude()),
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
         AlertDialog dialog = alert.create();
