@@ -33,6 +33,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -80,15 +81,14 @@ public class MainActivity extends AppCompatActivity
     LocationManager locationManager;
     double lat, lon, alt, accuracy;
     long fix;
-    long time = 5000;
-    float distance = 5;
+    long time = 0;
+    float distance = 10;
     GeoPoint pos;
     OverlayItem myLocationOverlayItem;
     Drawable myCurrentLocationMarker;
     Boolean tracking = false;
 
     Boolean private_track = false;
-    //ArrayList<GeoPoint> track = new ArrayList<>();
     ArrayList<Location> track = new ArrayList<>();
 
     private static final int CAMERA_REQUEST = 1888;
@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         fabRecord = findViewById(R.id.fabRecord);
         fabTrack = findViewById(R.id.fabTrack);
@@ -355,7 +356,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.LENGTH_SHORT).show();
     }
 
-    private void positionMarker() {
+    private void positionMarker(GeoPoint pos) {
         DefaultResourceProxyImpl resourceProxy = new DefaultResourceProxyImpl(getApplicationContext());
         myLocationOverlayItem = new OverlayItem("Here", "Current Position", pos);
         myCurrentLocationMarker = this.getResources().getDrawable(R.drawable.point);
@@ -419,7 +420,7 @@ public class MainActivity extends AppCompatActivity
         pos = new GeoPoint(lat, lon);
 
         myMapController.animateTo(pos);
-        positionMarker();
+        positionMarker(pos);
 
         runOnUiThread(new Runnable() {
             @Override
@@ -433,16 +434,24 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onLocationChanged(Location location) {
         if (tracking) {
-            track.add(location);
-            //todo: borrar la tostada en fase de producción
-            Toast.makeText(this, "Punto almacenado\nLatitud: " + location.getLatitude() +
-                            "\nLongitud: " + location.getLongitude() +
-                            "\nAltitud: " + location.getAltitude() +
-                            "\nPrecisión: " + Math.round(accuracy) + " m",
-                    Toast.LENGTH_SHORT).show();
+            //todo; bajar precision en modo produccion
+            if (location.getAccuracy() < 20) {
+                track.add(location);
+                //todo: borrar la tostada en fase de producción
+                Toast.makeText(this, "Punto almacenado\nLatitud: " + location.getLatitude() +
+                                "\nLongitud: " + location.getLongitude() +
+                                "\nAltitud: " + location.getAltitude() +
+                                "\nPrecisión: " + Math.round(accuracy) + " m",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Precisión insuficiente para grabar punto", Toast.LENGTH_SHORT).show();
+            }
         }
         myOpenMapView.getOverlays().clear();
-        registerLocationListener();
+
+        GeoPoint pos = new GeoPoint(location.getLatitude(), location.getLongitude());
+        myMapController.animateTo(pos);
+        positionMarker(pos);
     }
 
     @Override
@@ -519,23 +528,16 @@ public class MainActivity extends AppCompatActivity
                 fabRecord.setVisibility(View.INVISIBLE);
                 fabTrack.setVisibility(View.VISIBLE);
                 String track_name = trackName.getText().toString();
-
-                if (track_name.matches("")) {
-                    Toast.makeText(MainActivity.this, "Tienes que introducir un nombre de ruta", Toast.LENGTH_SHORT).show();
-                } else {
-                    if (trackPrivate.isChecked()) {
-                        private_track = true;
-                    }
-                    Toast.makeText(getBaseContext(), "¡Ruta grabada!", Toast.LENGTH_SHORT).show();
-                    generateGpx(track_name, track);
-                    //todo: solo para comprobar que se guarda el array
-                    /*for (Location i : track) {
-                        Toast.makeText(MainActivity.this, String.valueOf(track.size()) + "puntos\nPunto:\n"
-                                        + String.valueOf(i.getLatitude()) +
-                                        "\n" + String.valueOf(i.getLongitude()),
-                                Toast.LENGTH_SHORT).show();
-                    }*/
+                if (trackPrivate.isChecked()) {
+                    private_track = true;
                 }
+                if (track_name.matches("")) {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmddhhmmss");
+                    String date = dateFormat.format(new Date());
+                    track_name = "Track_" + date;
+                }
+                Toast.makeText(getBaseContext(), "¡Ruta grabada!", Toast.LENGTH_SHORT).show();
+                generateGpx(track_name, track);
             }
         });
         AlertDialog dialog = alert.create();
@@ -616,13 +618,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void generateGpx(String name, ArrayList<Location> track) {
-        String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"MapSource 6.15.5\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n";
-
-        StringBuilder segments = new StringBuilder();
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+
+        String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>" +
+                "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"MapSource 6.15.5\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n" +
+                "<trk><name>" + name + "</name><trkseg>";
+        StringBuilder segments = new StringBuilder();
         for (Location location : track) {
             segments
-                    .append("<wpt lat=\"")
+                    .append("<trkpt lat=\"")
                     .append(location.getLatitude())
                     .append("\" lon=\"")
                     .append(location.getLongitude())
@@ -630,11 +634,9 @@ public class MainActivity extends AppCompatActivity
                     .append(location.getAltitude())
                     .append("</ele><time>")
                     .append(df.format(new Date(location.getTime())))
-                    .append("</time><name>")
-                    .append(name)
-                    .append("</name></wpt>\n");
+                    .append("</time></trkpt>\n");
         }
-        String footer = "</gpx>";
+        String footer = "</trkseg></trk></gpx>";
 
         File trackFileDir = getDir();
 
