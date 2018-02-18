@@ -57,8 +57,10 @@ import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -86,7 +88,8 @@ public class MainActivity extends AppCompatActivity
     Boolean tracking = false;
 
     Boolean private_track = false;
-    ArrayList<GeoPoint> track = new ArrayList<>();
+    //ArrayList<GeoPoint> track = new ArrayList<>();
+    ArrayList<Location> track = new ArrayList<>();
 
     private static final int CAMERA_REQUEST = 1888;
 
@@ -125,6 +128,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 if (login) {
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                        // todo: Bajar la precision en produccion
                         if (accuracy <= 30.0) {
                             tracking = true;
                             fabTrack.setVisibility(View.INVISIBLE);
@@ -191,7 +195,7 @@ public class MainActivity extends AppCompatActivity
 
             if (!pictureFileDir.exists() && !pictureFileDir.mkdirs()) {
 
-                Toast.makeText(this, "Can't create directory to save image.",
+                Toast.makeText(this, "No se ha podido crear el directorio.",
                         Toast.LENGTH_LONG).show();
                 return;
             }
@@ -213,13 +217,13 @@ public class MainActivity extends AppCompatActivity
             } finally {
                 try {
                     if (out != null) {
-                        Toast.makeText(this, "New Image saved:" + photoFile,
+                        Toast.makeText(this, "Imagen guardada:" + photoFile,
                                 Toast.LENGTH_LONG).show();
                         out.close();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    Toast.makeText(this, "Image could not be saved.",
+                    Toast.makeText(this, "No se puede guardar la imeagen.",
                             Toast.LENGTH_LONG).show();
                 }
             }
@@ -290,7 +294,7 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void registerRequest() {
+    private void registerRequest() {
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.register_dialog, null);
         final EditText etUsername = alertLayout.findViewById(R.id.username);
@@ -323,7 +327,7 @@ public class MainActivity extends AppCompatActivity
 
     // ----------------------------------------------------------------------------------------------------------------
     // Métodos para mapas y track
-    public void initializeMap() {
+    private void initializeMap() {
         Context ctx = getApplicationContext();
 
         myOpenMapView = findViewById(R.id.openmapview);
@@ -338,7 +342,7 @@ public class MainActivity extends AppCompatActivity
         myOpenMapView.getOverlays().add(this.mCompassOverlay);
     }
 
-    public void myPosition() {
+    private void myPosition() {
         String _lat = String.format("%.4f", lat);
         String _lon = String.format("%.4f", lon);
         String _alt = String.format("%.1f", alt);
@@ -351,7 +355,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.LENGTH_SHORT).show();
     }
 
-    public void positionMarker() {
+    private void positionMarker() {
         DefaultResourceProxyImpl resourceProxy = new DefaultResourceProxyImpl(getApplicationContext());
         myLocationOverlayItem = new OverlayItem("Here", "Current Position", pos);
         myCurrentLocationMarker = this.getResources().getDrawable(R.drawable.point);
@@ -371,7 +375,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @SuppressLint("NewApi")
-    public void registerLocationListener() {
+    private void registerLocationListener() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         Criteria criteria = new Criteria();
@@ -428,17 +432,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-        lat = location.getLatitude();
-        lon = location.getLongitude();
-        pos = new GeoPoint(lat, lon);
-
-        Toast.makeText(this, tracking.toString(), Toast.LENGTH_SHORT).show();
         if (tracking) {
-            track.add(pos);
+            track.add(location);
             //todo: borrar la tostada en fase de producción
-            Toast.makeText(this, "Punto almacenado\nLatitud: " + pos.getLatitude() +
-                            "\nLongitud: " + pos.getLongitude() +
-                            "\nAltitud: " + pos.getAltitude() +
+            Toast.makeText(this, "Punto almacenado\nLatitud: " + location.getLatitude() +
+                            "\nLongitud: " + location.getLongitude() +
+                            "\nAltitud: " + location.getAltitude() +
                             "\nPrecisión: " + Math.round(accuracy) + " m",
                     Toast.LENGTH_SHORT).show();
         }
@@ -452,12 +451,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onProviderEnabled(String s) {
-        //Toast.makeText(this, "La señal GPS está disponible", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onProviderDisabled(String s) {
-        //Toast.makeText(this, "La señal GPS se ha desactivado", Toast.LENGTH_SHORT).show();
     }
 
     @SuppressLint({"NewApi", "StaticFieldLeak"})
@@ -519,19 +516,25 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 tracking = false;
-                String track_name = trackName.getText().toString();
-                if (trackPrivate.isChecked()) {
-                    private_track = true;
-                }
                 fabRecord.setVisibility(View.INVISIBLE);
                 fabTrack.setVisibility(View.VISIBLE);
-                Toast.makeText(getBaseContext(), "¡Ruta grabada!", Toast.LENGTH_SHORT).show();
-                //todo: solo para comprobar que se guarda el array
-                for (GeoPoint i : track) {
-                    Toast.makeText(MainActivity.this, String.valueOf(track.size()) + "puntos\nPunto:\n"
-                                    + String.valueOf(i.getLatitude()) +
-                                    "\n" + String.valueOf(i.getLongitude()),
-                            Toast.LENGTH_SHORT).show();
+                String track_name = trackName.getText().toString();
+
+                if (track_name.matches("")) {
+                    Toast.makeText(MainActivity.this, "Tienes que introducir un nombre de ruta", Toast.LENGTH_SHORT).show();
+                } else {
+                    if (trackPrivate.isChecked()) {
+                        private_track = true;
+                    }
+                    Toast.makeText(getBaseContext(), "¡Ruta grabada!", Toast.LENGTH_SHORT).show();
+                    generateGpx(track_name, track);
+                    //todo: solo para comprobar que se guarda el array
+                    /*for (Location i : track) {
+                        Toast.makeText(MainActivity.this, String.valueOf(track.size()) + "puntos\nPunto:\n"
+                                        + String.valueOf(i.getLatitude()) +
+                                        "\n" + String.valueOf(i.getLongitude()),
+                                Toast.LENGTH_SHORT).show();
+                    }*/
                 }
             }
         });
@@ -548,7 +551,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public boolean uploadTrack() {
+    private boolean uploadTrack() {
         boolean result;
         httpclient = new DefaultHttpClient();
         httppost = new HttpPost(URL_PHP + "upload-track.php");
@@ -611,6 +614,55 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(context, "Error, no se ha podido guardar la ruta", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void generateGpx(String name, ArrayList<Location> track) {
+        String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"MapSource 6.15.5\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n";
+
+        StringBuilder segments = new StringBuilder();
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        for (Location location : track) {
+            segments
+                    .append("<wpt lat=\"")
+                    .append(location.getLatitude())
+                    .append("\" lon=\"")
+                    .append(location.getLongitude())
+                    .append("\"><ele>")
+                    .append(location.getAltitude())
+                    .append("</ele><time>")
+                    .append(df.format(new Date(location.getTime())))
+                    .append("</time><name>")
+                    .append(name)
+                    .append("</name></wpt>\n");
+        }
+        String footer = "</gpx>";
+
+        File trackFileDir = getDir();
+
+        if (!trackFileDir.exists() && !trackFileDir.mkdirs()) {
+            Toast.makeText(this, "No se ha podido crear el directorio.",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String trackName = "Track_" + name + ".gpx";
+
+        String filename = trackFileDir.getPath() + File.separator + trackName;
+
+        File trackFile = new File(filename);
+
+        try {
+            FileWriter writer = new FileWriter(trackFile, true);
+            writer.write(header);
+            writer.append(segments.toString());
+            writer.append(footer);
+            writer.flush();
+            writer.close();
+            //todo: borrar en fase de produccion
+            Toast.makeText(this, "Archivo creado", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Log.e("generateGpx", "Error creando archivo", e);
+        }
+    }
     // Fin métodos para mapas y track
     // ----------------------------------------------------------------------------------------------------------------
 
@@ -618,12 +670,12 @@ public class MainActivity extends AppCompatActivity
     // Métodos para fotos georreferenciadas
     private File getDir() {
         File sdDir = Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
         return new File(sdDir, "PhotoTrack");
     }
 
 
-    public boolean uploadPhoto() {
+    private boolean uploadPhoto() {
         boolean result;
         httpclient = new DefaultHttpClient();
         httppost = new HttpPost(URL_PHP + "upload-photo.php");
