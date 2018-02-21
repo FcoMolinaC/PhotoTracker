@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -34,16 +35,29 @@
         </activity>
         <activity
             android:name=".LoginActivity"
-            android:theme="@style/FullscreenTheme"
-            android:configChanges="orientation|screenSize"/>
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/FullscreenTheme" />
         <activity
             android:name=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".GalleryActivity"
             android:configChanges="orientation|screenSize" />
-        <activity android:name=".GalleryActivity" android:configChanges="orientation|screenSize" />
-        <activity android:name=".PhotoActivity" android:configChanges="orientation|screenSize" />
-        <activity android:name=".TrackList" android:configChanges="orientation|screenSize" />
-        <activity android:name=".TrackMap" android:configChanges="orientation|screenSize" />
+        <activity
+            android:name=".PhotoActivity"
+            android:configChanges="orientation|screenSize" />
+        <activity
+            android:name=".TrackList"
+            android:configChanges="orientation|screenSize" />
+        <activity
+            android:name=".TrackMap"
+            android:configChanges="orientation|screenSize" />
+
+        <service
+            android:name=".RegisterTrack"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

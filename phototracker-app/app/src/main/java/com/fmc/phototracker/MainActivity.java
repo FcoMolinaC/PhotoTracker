@@ -4,9 +4,11 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -23,6 +25,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -86,7 +89,6 @@ public class MainActivity extends AppCompatActivity
     GeoPoint pos;
     OverlayItem myLocationOverlayItem;
     Drawable myCurrentLocationMarker;
-    Boolean tracking = false;
 
     Boolean private_track = false;
     ArrayList<Location> track = new ArrayList<>();
@@ -124,14 +126,19 @@ public class MainActivity extends AppCompatActivity
         registerLocationListener();
         myMapController.setZoom(22);
 
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                new IntentFilter("intentTrack"));
+
         fabTrack.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("NewApi")
             @Override
             public void onClick(View view) {
                 if (login) {
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         // todo: Bajar la precision en produccion
                         if (accuracy <= 30.0) {
-                            tracking = true;
+                            Intent TrackIntent = new Intent(MainActivity.this, RegisterTrack.class);
+                            startService(TrackIntent);
                             fabTrack.setVisibility(View.INVISIBLE);
                             fabRecord.setVisibility(View.VISIBLE);
                             Snackbar.make(view, "Comenzando a grabar recorrido", Snackbar.LENGTH_LONG)
@@ -172,7 +179,8 @@ public class MainActivity extends AppCompatActivity
         fabRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                tracking = false;
+                Intent TrackIntent = new Intent(MainActivity.this, RegisterTrack.class);
+                stopService(TrackIntent);
                 registerTrack();
             }
         });
@@ -326,6 +334,13 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
     }
 
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            track = intent.getParcelableArrayListExtra("Track");
+        }
+    };
+
     // ----------------------------------------------------------------------------------------------------------------
     // Métodos para mapas y track
     private void initializeMap() {
@@ -433,20 +448,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-        if (tracking) {
-            //todo; bajar precision en modo produccion
-            if (location.getAccuracy() < 20) {
-                track.add(location);
-                //todo: borrar la tostada en fase de producción
-                Toast.makeText(this, "Punto almacenado\nLatitud: " + location.getLatitude() +
-                                "\nLongitud: " + location.getLongitude() +
-                                "\nAltitud: " + location.getAltitude() +
-                                "\nPrecisión: " + Math.round(accuracy) + " m",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "Precisión insuficiente para grabar punto", Toast.LENGTH_SHORT).show();
-            }
-        }
         myOpenMapView.getOverlays().clear();
 
         GeoPoint pos = new GeoPoint(location.getLatitude(), location.getLongitude());
@@ -513,7 +514,6 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                tracking = false;
                 fabRecord.setVisibility(View.INVISIBLE);
                 fabTrack.setVisibility(View.VISIBLE);
                 Toast.makeText(getBaseContext(), "Cancelado", Toast.LENGTH_SHORT).show();
@@ -524,7 +524,6 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                tracking = false;
                 fabRecord.setVisibility(View.INVISIBLE);
                 fabTrack.setVisibility(View.VISIBLE);
                 String track_name = trackName.getText().toString();
