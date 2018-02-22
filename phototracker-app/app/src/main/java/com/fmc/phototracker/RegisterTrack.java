@@ -2,6 +2,8 @@ package com.fmc.phototracker;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -46,6 +48,7 @@ public class RegisterTrack extends Service
         wakeLock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakeLock");
         wakeLock.acquire(60 * 60 * 1000L);
         registerLocationListener();
+        showForegroundNotification();
 
         return START_NOT_STICKY;
     }
@@ -56,6 +59,7 @@ public class RegisterTrack extends Service
 
         wakeLock.release();
         sendMessageToActivity(track);
+        stopForeground(true);
     }
 
     @Override
@@ -67,6 +71,27 @@ public class RegisterTrack extends Service
         Intent intent = new Intent("intentTrack");
         intent.putExtra("Track", track);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private static final int NOTIFICATION_ID = 1;
+
+    private void showForegroundNotification() {
+        Intent showTaskIntent = new Intent(getApplicationContext(), MainActivity.class);
+        showTaskIntent.setAction(Intent.ACTION_MAIN);
+        showTaskIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        showTaskIntent.setFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this, 0, showTaskIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+
+        Notification notification = new Notification.Builder(getApplicationContext())
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText("Grabando ruta")
+                .setSmallIcon(R.drawable.logo)
+                .setWhen(System.currentTimeMillis())
+                .setContentIntent(pendingIntent)
+                .build();
+        startForeground(NOTIFICATION_ID, notification);
     }
 
     // ----------------------------------------------------------------------------------------------------------------

@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
 
     Boolean login;
+    Bundle bundle;
 
     MapView myOpenMapView;
     IMapController myMapController;
@@ -119,7 +120,8 @@ public class MainActivity extends AppCompatActivity
 
         fabRecord.setVisibility(View.INVISIBLE);
 
-        Bundle bundle = getIntent().getExtras();
+        bundle = getIntent().getExtras();
+        assert bundle != null;
         login = bundle.getBoolean("login");
 
         initializeMap();
