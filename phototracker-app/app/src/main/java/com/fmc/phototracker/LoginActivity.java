@@ -8,7 +8,6 @@ import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -18,19 +17,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fmc.phototracker.model.User;
 
 public class LoginActivity extends AppCompatActivity {
@@ -39,15 +25,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText etUsername;
     EditText etEmail;
     boolean login;
-    private List<User> userlist = null;
-    private int pos = 0;
 
-    private static HttpClient httpclient;
-    private static List<NameValuePair> param_POST;
-    private static HttpPost httppost;
-
-    private final static String URL_SERVIDOR = "192.168.0.12";
-    private final static String URL_PHP = "http://" + URL_SERVIDOR + "/phototrack/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,65 +114,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean login() {
-        boolean result;
-        httpclient = new DefaultHttpClient();
-        httppost = new HttpPost(URL_PHP + "login.php");
-
-        param_POST = new ArrayList<NameValuePair>(2);
-        param_POST.add(new BasicNameValuePair("username", usertext.getText().toString()));
-        param_POST.add(new BasicNameValuePair("password", passtext.getText().toString()));
-
-        /*User user = userlist.get(pos);
-        String id = String.valueOf(user.getId());
-        param_POST.add(new BasicNameValuePair("id", id));*/
-
-        try {
-            httppost.setEntity(new UrlEncodedFormEntity(param_POST));
-            httpclient.execute(httppost);
-            result = true;
-        } catch (UnsupportedEncodingException e) {
-            result = false;
-            e.printStackTrace();
-            Log.d("error ", String.valueOf(e));
-        } catch (ClientProtocolException e) {
-            result = false;
-            e.printStackTrace();
-            Log.d("error ", String.valueOf(e));
-        } catch (IOException e) {
-            result = false;
-            e.printStackTrace();
-            Log.d("error ", String.valueOf(e));
-        }
-        return result;
+        return false;
     }
 
     public boolean insert() {
-        boolean result;
-        httpclient = new DefaultHttpClient();
-        httppost = new HttpPost(URL_PHP + "insert.php");
-
-        param_POST = new ArrayList<NameValuePair>(2);
-        param_POST.add(new BasicNameValuePair("username", etUsername.getText().toString()));
-        param_POST.add(new BasicNameValuePair("password", etEmail.getText().toString()));
-
-        try {
-            httppost.setEntity(new UrlEncodedFormEntity(param_POST));
-            httpclient.execute(httppost);
-            result = true;
-        } catch (UnsupportedEncodingException e) {
-            result = false;
-            e.printStackTrace();
-            Log.d("error ", String.valueOf(e));
-        } catch (ClientProtocolException e) {
-            result = false;
-            e.printStackTrace();
-            Log.d("error ", String.valueOf(e));
-        } catch (IOException e) {
-            result = false;
-            e.printStackTrace();
-            Log.d("error ", String.valueOf(e));
-        }
-        return result;
+        return false;
     }
 
     class WebService_login extends AsyncTask<String, String, String> {
