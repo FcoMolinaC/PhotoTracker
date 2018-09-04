@@ -8,9 +8,12 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.fmc.phototracker.photo.ListAdapter;
+import com.fmc.phototracker.photo.ListEntries;
+
 import java.util.ArrayList;
 
-public class TrackList extends Activity {
+public class TrackListActivity extends Activity {
 
     private ListView tracklist;
 
@@ -47,7 +50,7 @@ public class TrackList extends Activity {
                 //ListEntries select = (ListEntries) parent.getItemAtPosition(position);
 
                 //To-do: mostrar el track en el mapa. Pasa la info como bundle
-                Intent trackmapIntent = new Intent(TrackList.this, TrackMap.class);
+                Intent trackmapIntent = new Intent(TrackListActivity.this, TrackMapActivity.class);
                 startActivity(trackmapIntent);
             }
         });

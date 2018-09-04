@@ -1,4 +1,4 @@
-package com.fmc.phototracker;
+package com.fmc.phototracker.photo;
 
 import android.content.Context;
 import android.view.LayoutInflater;

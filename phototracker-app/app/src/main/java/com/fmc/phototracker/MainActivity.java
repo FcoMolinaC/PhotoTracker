@@ -41,6 +41,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.fmc.phototracker.services.RegisterTrack;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -48,6 +50,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -274,7 +277,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.routes) {
             if (login) {
                 //todo: cargar las rutas del usuario cuando esté disponible la BBDD
-                Intent trackIntent = new Intent(MainActivity.this, TrackList.class);
+                Intent trackIntent = new Intent(MainActivity.this, TrackListActivity.class);
                 startActivity(trackIntent);
             } else {
                 registerRequest();

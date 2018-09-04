@@ -1,4 +1,4 @@
-package com.fmc.phototracker;
+package com.fmc.phototracker.services;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -18,6 +18,9 @@ import android.os.PowerManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
+
+import com.fmc.phototracker.MainActivity;
+import com.fmc.phototracker.R;
 
 import java.util.ArrayList;
 

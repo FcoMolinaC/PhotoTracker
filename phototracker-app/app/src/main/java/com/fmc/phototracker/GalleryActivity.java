@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.fmc.phototracker.photo.Photo;
 
 /**
  * Created by FMC on 27/11/2017.

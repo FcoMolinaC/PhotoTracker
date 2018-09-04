@@ -31,6 +31,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fmc.phototracker.model.User;
+
 public class LoginActivity extends AppCompatActivity {
     EditText usertext;
     EditText passtext;

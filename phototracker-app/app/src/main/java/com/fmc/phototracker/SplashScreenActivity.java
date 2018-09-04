@@ -9,7 +9,7 @@ import android.view.Window;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class SplashScreen extends AppCompatActivity {
+public class SplashScreenActivity extends AppCompatActivity {
 
     // Establece la duración de la actividad
     // To-Do: establecer el tiempo de carga de la base de datos cuando esté implementada
@@ -28,7 +28,7 @@ public class SplashScreen extends AppCompatActivity {
             @Override
             public void run() {
                 Intent mainIntent = new Intent().setClass(
-                        SplashScreen.this, LoginActivity.class);
+                        SplashScreenActivity.this, LoginActivity.class);
                 startActivity(mainIntent);
                 finish();
             }

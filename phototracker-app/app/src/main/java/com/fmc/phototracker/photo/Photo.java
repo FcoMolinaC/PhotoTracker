@@ -1,4 +1,4 @@
-package com.fmc.phototracker;
+package com.fmc.phototracker.photo;
 
 /**
  * Created by FMC on 27/11/2017.

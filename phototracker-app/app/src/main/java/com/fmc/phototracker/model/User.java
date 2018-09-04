@@ -1,9 +1,10 @@
-package com.fmc.phototracker;
+package com.fmc.phototracker.model;
 
 public class User {
     private int id;
     private String username;
     private String password;
+    private String email;
     private int[] tracks;
     private int[] photo;
 
@@ -29,6 +30,14 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public int[] getTracks() {
