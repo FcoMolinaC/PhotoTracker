@@ -46,7 +46,7 @@ dependencies {
     implementation 'org.apache.httpcomponents:httpcore:4.4.1'
     //noinspection DuplicatePlatformClasses
     implementation 'com.google.firebase:firebase-core:16.0.3'
-
+    implementation 'com.google.firebase:firebase-messaging:17.3.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
