@@ -17,15 +17,19 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import com.fmc.phototracker.model.User;
 
 public class LoginActivity extends AppCompatActivity {
     EditText usertext;
     EditText passtext;
     EditText etUsername;
+    EditText etPassword;
     EditText etEmail;
     boolean login;
-
+    private DatabaseReference dbUsers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +70,7 @@ public class LoginActivity extends AppCompatActivity {
                 } else if (password.matches("")) {
                     Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña", Toast.LENGTH_SHORT).show();
                 } else {
-                    new WebService_login(LoginActivity.this).execute();
+                    new Service_login(LoginActivity.this).execute();
                 }
             }
         });
@@ -77,7 +81,8 @@ public class LoginActivity extends AppCompatActivity {
                 LayoutInflater inflater = getLayoutInflater();
                 View alertLayout = inflater.inflate(R.layout.register_dialog, null);
                 etUsername = alertLayout.findViewById(R.id.username);
-                etEmail = alertLayout.findViewById(R.id.password);
+                etPassword = alertLayout.findViewById(R.id.password);
+                etEmail = alertLayout.findViewById(R.id.email);
 
                 AlertDialog.Builder alert = new AlertDialog.Builder(LoginActivity.this);
                 alert.setTitle("Registro");
@@ -86,13 +91,26 @@ public class LoginActivity extends AppCompatActivity {
                 alert.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(LoginActivity.this, "Registro cancelado", Toast.LENGTH_SHORT).show();
                     }
                 });
 
                 alert.setPositiveButton("Registrar", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        new WebService_insert(LoginActivity.this).execute();
+                        String username = etUsername.getText().toString();
+                        String password = etPassword.getText().toString();
+                        String email = etEmail.getText().toString();
+
+                        if (email.matches("")) {
+                            Toast.makeText(LoginActivity.this, "Tienes que introducir un email válido\nInténtalo de nuevo", Toast.LENGTH_SHORT).show();
+                        } else if (username.matches("")) {
+                            Toast.makeText(LoginActivity.this, "Tienes que introducir un usuario\nInténtalo de nuevo", Toast.LENGTH_SHORT).show();
+                        } else if (password.matches("")) {
+                            Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña\nInténtalo de nuevo", Toast.LENGTH_SHORT).show();
+                        } else {
+                            new Service_insert(LoginActivity.this).execute();
+                        }
                     }
                 });
                 AlertDialog dialog = alert.create();
@@ -117,14 +135,17 @@ public class LoginActivity extends AppCompatActivity {
         return false;
     }
 
-    public boolean insert() {
-        return false;
+    private void insert(String username, String password, String email) {
+        dbUsers = FirebaseDatabase.getInstance().getReference().child("users");
+
+        User new_user = new User(username, password, email);
+        dbUsers.push().setValue(new_user);
     }
 
-    class WebService_login extends AsyncTask<String, String, String> {
+    class Service_login extends AsyncTask<String, String, String> {
         private Activity context;
 
-        WebService_login(Activity context) {
+        Service_login(Activity context) {
             this.context = context;
         }
 
@@ -155,10 +176,10 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    class WebService_insert extends AsyncTask<String, String, String> {
+    class Service_insert extends AsyncTask<String, String, String> {
         private Activity context;
 
-        WebService_insert(Activity context) {
+        Service_insert(Activity context) {
             this.context = context;
         }
 
@@ -167,13 +188,13 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params) {
-            String result;
+            String name = etUsername.getText().toString();
+            String password = etPassword.getText().toString();
+            String email = etEmail.getText().toString();
 
-            if (insert())
-                result = "OK";
-            else
-                result = "ERROR";
-            return result;
+            insert(name, password, email);
+
+            return "OK";
         }
 
         protected void onPostExecute(String result) {

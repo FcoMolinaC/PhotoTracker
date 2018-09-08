@@ -3,32 +3,30 @@ package com.fmc.phototracker.model;
 import java.util.Arrays;
 
 public class User {
-    private int id;
     private String username;
     private String password;
     private String email;
-    private int[] tracks;
-    private int[] photo;
+    //private int[] tracks;
+    //private int[] photo;
 
     public User() {
     }
 
-    public User(int id, String username, String password, String email, int[] tracks, int[] photo) {
-        this.id = id;
+    public User(String username, String password, String email) {
         this.username = username;
         this.password = password;
         this.email = email;
-        this.tracks = tracks;
-        this.photo = photo;
+        //this.tracks = tracks;
+        //this.photo = photo;
     }
 
-    public int getId() {
+    /*public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
-    }
+    }*/
 
     public String getUsername() {
         return username;
@@ -54,7 +52,7 @@ public class User {
         this.email = email;
     }
 
-    public int[] getTracks() {
+    /*public int[] getTracks() {
         return tracks;
     }
 
@@ -68,17 +66,14 @@ public class User {
 
     public void setPhoto(int[] photo) {
         this.photo = photo;
-    }
+    }*/
 
     @Override
     public String toString() {
         return "User{" +
-                "id=" + id +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
-                ", tracks=" + Arrays.toString(tracks) +
-                ", photo=" + Arrays.toString(photo) +
                 '}';
     }
 }
