@@ -1,12 +1,11 @@
 package com.fmc.phototracker;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,10 +16,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import com.fmc.phototracker.model.User;
+import com.google.firebase.database.ValueEventListener;
 
 public class LoginActivity extends AppCompatActivity {
     EditText usertext;
@@ -70,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
                 } else if (password.matches("")) {
                     Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña", Toast.LENGTH_SHORT).show();
                 } else {
-                    new Service_login(LoginActivity.this).execute();
+                    login();
                 }
             }
         });
@@ -109,7 +111,7 @@ public class LoginActivity extends AppCompatActivity {
                         } else if (password.matches("")) {
                             Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña\nInténtalo de nuevo", Toast.LENGTH_SHORT).show();
                         } else {
-                            new Service_insert(LoginActivity.this).execute();
+                            register();
                         }
                     }
                 });
@@ -131,83 +133,79 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private boolean login() {
-        return false;
-    }
+    private void login() {
+        String user = usertext.getText().toString();
 
-    private void insert(String username, String password, String email) {
         dbUsers = FirebaseDatabase.getInstance().getReference().child("users");
+        dbUsers.orderByChild("username").equalTo(user).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String password = passtext.getText().toString();
 
-        User new_user = new User(username, password, email);
-        dbUsers.push().setValue(new_user);
+                if (dataSnapshot.exists()) {
+                    dbUsers.orderByChild("password").equalTo(password).addListenerForSingleValueEvent(new ValueEventListener() {
+
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                login = true;
+                                Intent mainIntent = new Intent().setClass(
+                                        LoginActivity.this, MainActivity.class);
+                                mainIntent.putExtra("login", login);
+                                startActivity(mainIntent);
+                                finish();
+                            } else {
+                                Toast.makeText(LoginActivity.this, "Error, la contraseña no es correcta", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                        }
+                    });
+                } else {
+                    Toast.makeText(LoginActivity.this, "Error, el nombre de usuario no está registrado", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
     }
 
-    class Service_login extends AsyncTask<String, String, String> {
-        private Activity context;
 
-        Service_login(Activity context) {
-            this.context = context;
-        }
+    private void register() {
+        String email = etEmail.getText().toString();
 
-        protected void onPreExecute() {
-        }
+        dbUsers = FirebaseDatabase.getInstance().getReference().child("users");
+        dbUsers.orderByChild("email").equalTo(email).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String email = etEmail.getText().toString();
+                String name = etUsername.getText().toString();
+                String password = etPassword.getText().toString();
 
-        @Override
-        protected String doInBackground(String... params) {
-            String result;
+                if (dataSnapshot.exists()) {
+                    Toast.makeText(LoginActivity.this, "El email introducido ya está registrado\nInténtelo de nuevo con otro email", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(LoginActivity.this, "El registro se ha completado correctamente", Toast.LENGTH_SHORT).show();
+                    User new_user = new User(name, password, email);
+                    dbUsers.push().setValue(new_user);
 
-            if (login())
-                result = "OK";
-            else
-                result = "ERROR";
-            return result;
-        }
+                    login = true;
+                    Intent mainIntent = new Intent().setClass(
+                            LoginActivity.this, MainActivity.class);
+                    mainIntent.putExtra("login", login);
+                    startActivity(mainIntent);
+                    finish();
+                }
+            }
 
-        protected void onPostExecute(String result) {
-            if (result.equals("OK")) {
-                login = true;
-                Intent mainIntent = new Intent().setClass(
-                        LoginActivity.this, MainActivity.class);
-                mainIntent.putExtra("login", login);
-                startActivity(mainIntent);
-                finish();
-            } else
-                Toast.makeText(context, "Error, no se ha podido encontrar al usuario", Toast.LENGTH_SHORT).show();
-        }
-    }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-    class Service_insert extends AsyncTask<String, String, String> {
-        private Activity context;
-
-        Service_insert(Activity context) {
-            this.context = context;
-        }
-
-        protected void onPreExecute() {
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            String name = etUsername.getText().toString();
-            String password = etPassword.getText().toString();
-            String email = etEmail.getText().toString();
-
-            insert(name, password, email);
-
-            return "OK";
-        }
-
-        protected void onPostExecute(String result) {
-            if (result.equals("OK")) {
-                Toast.makeText(context, "Registro completado", Toast.LENGTH_SHORT).show();
-                login = true;
-                Intent mainIntent = new Intent().setClass(
-                        LoginActivity.this, MainActivity.class);
-                mainIntent.putExtra("login", login);
-                startActivity(mainIntent);
-                finish();
-            } else
-                Toast.makeText(context, "Error, no se ha podido completar el registro", Toast.LENGTH_SHORT).show();
-        }
+            }
+        });
     }
 }
