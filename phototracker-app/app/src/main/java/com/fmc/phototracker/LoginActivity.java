@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -139,14 +138,14 @@ public class LoginActivity extends AppCompatActivity {
         dbUsers = FirebaseDatabase.getInstance().getReference().child("users");
         dbUsers.orderByChild("username").equalTo(user).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            public void onDataChange(DataSnapshot dataSnapshot) {
                 String password = passtext.getText().toString();
 
                 if (dataSnapshot.exists()) {
                     dbUsers.orderByChild("password").equalTo(password).addListenerForSingleValueEvent(new ValueEventListener() {
 
                         @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.exists()) {
                                 login = true;
                                 Intent mainIntent = new Intent().setClass(
@@ -160,7 +159,7 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                        public void onCancelled(DatabaseError databaseError) {
                         }
                     });
                 } else {
@@ -169,7 +168,7 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onCancelled(DatabaseError databaseError) {
             }
         });
     }
@@ -191,19 +190,22 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(LoginActivity.this, "El registro se ha completado correctamente", Toast.LENGTH_SHORT).show();
                     User new_user = new User(name, password, email);
-                    dbUsers.push().setValue(new_user);
-
+                    DatabaseReference pushRef = dbUsers.push();
+                    String push_id = pushRef.getKey();
+                    pushRef.setValue(new_user);
+                    
                     login = true;
                     Intent mainIntent = new Intent().setClass(
                             LoginActivity.this, MainActivity.class);
                     mainIntent.putExtra("login", login);
+                    mainIntent.putExtra("id", push_id);
                     startActivity(mainIntent);
                     finish();
                 }
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onCancelled(DatabaseError databaseError) {
 
             }
         });
