@@ -21,6 +21,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -42,6 +43,11 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.fmc.phototracker.services.RegisterTrack;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.api.IMapController;
@@ -55,10 +61,12 @@ import org.osmdroid.views.overlay.compass.CompassOverlay;
 import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -92,6 +100,9 @@ public class MainActivity extends AppCompatActivity
     private static final int CAMERA_REQUEST = 1888;
 
     private FloatingActionButton fabRecord, fabTrack, fabPosition, fabPhoto;
+
+    private UploadTask uploadTask;
+    FirebaseStorage storage = FirebaseStorage.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -542,45 +553,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private boolean uploadTrack() {
-        return false;
-    }
-
-    class WebService_uploadTrack extends AsyncTask<String, String, String> {
-        private Activity context;
-
-        WebService_uploadTrack(Activity context) {
-            this.context = context;
-        }
-
-        protected void onPreExecute() {
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            String result;
-
-            if (uploadPhoto())
-                result = "OK";
-            else
-                result = "ERROR";
-            return result;
-        }
-
-        protected void onPostExecute(String result) {
-            if (result.equals("OK")) {
-                Toast.makeText(context, "Ruta guardada", Toast.LENGTH_SHORT).show();
-                login = true;
-                Intent mainIntent = new Intent().setClass(
-                        MainActivity.this, MainActivity.class);
-                mainIntent.putExtra("login", login);
-                startActivity(mainIntent);
-                finish();
-            } else
-                Toast.makeText(context, "Error, no se ha podido guardar la ruta", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void generateGpx(String name, ArrayList<Location> track) {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
@@ -625,9 +597,32 @@ public class MainActivity extends AppCompatActivity
             writer.close();
             //todo: borrar en fase de produccion
             Toast.makeText(this, "Archivo creado", Toast.LENGTH_SHORT).show();
+
+            uploadTrack(filename);
+
         } catch (IOException e) {
             Log.e("generateGpx", "Error creando archivo", e);
         }
+    }
+
+    private void uploadTrack(String filename) throws FileNotFoundException {
+        StorageReference storageRef = storage.getReference();
+        StorageReference trackRef = storageRef.child(filename);
+
+        InputStream stream = new FileInputStream(new File(filename));
+
+        uploadTask = trackRef.putStream(stream);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Toast.makeText(MainActivity.this, "Subido", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
     // Fin métodos para mapas y track
     // ----------------------------------------------------------------------------------------------------------------

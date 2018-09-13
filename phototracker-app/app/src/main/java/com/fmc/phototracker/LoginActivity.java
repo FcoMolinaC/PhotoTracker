@@ -193,12 +193,13 @@ public class LoginActivity extends AppCompatActivity {
                     DatabaseReference pushRef = dbUsers.push();
                     String push_id = pushRef.getKey();
                     pushRef.setValue(new_user);
-                    
+
                     login = true;
                     Intent mainIntent = new Intent().setClass(
                             LoginActivity.this, MainActivity.class);
                     mainIntent.putExtra("login", login);
                     mainIntent.putExtra("id", push_id);
+                    mainIntent.putExtra("email", email);
                     startActivity(mainIntent);
                     finish();
                 }
