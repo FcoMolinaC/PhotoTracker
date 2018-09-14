@@ -2,7 +2,6 @@ package com.fmc.phototracker;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -289,15 +288,6 @@ public class MainActivity extends AppCompatActivity
             }
         } else if (id == R.id.nav_explore) {
             //todo: cargar las rutas públicas cuando estén disponibles
-        } else if (id == R.id.nav_share) {
-            //todo: Compartir foto cuando esté disponible la BBDD
-        } else if (id == R.id.nav_send) {
-            // todo: Añadir la ruta al mensaje cuando esté disponible
-            Intent sendIntent = new Intent();
-            sendIntent.setAction(Intent.ACTION_SEND);
-            sendIntent.putExtra(Intent.EXTRA_TEXT, "Mira mi ruta de Phototrack!");
-            sendIntent.setType("text/plain");
-            startActivity(sendIntent);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
