@@ -598,16 +598,16 @@ public class MainActivity extends AppCompatActivity
             //todo: borrar en fase de produccion
             Toast.makeText(this, "Archivo creado", Toast.LENGTH_SHORT).show();
 
-            uploadTrack(filename);
+            uploadTrack(filename, trackName);
 
         } catch (IOException e) {
             Log.e("generateGpx", "Error creando archivo", e);
         }
     }
 
-    private void uploadTrack(String filename) throws FileNotFoundException {
+    private void uploadTrack(String filename, String trackName) throws FileNotFoundException {
         StorageReference storageRef = storage.getReference();
-        StorageReference trackRef = storageRef.child(filename);
+        StorageReference trackRef = storageRef.child("tracks/"+trackName);
 
         InputStream stream = new FileInputStream(new File(filename));
 
