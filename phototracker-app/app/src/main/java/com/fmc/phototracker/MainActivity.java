@@ -230,6 +230,7 @@ public class MainActivity extends AppCompatActivity
                         Toast.makeText(this, "Imagen guardada:" + photoFile,
                                 Toast.LENGTH_LONG).show();
                         out.close();
+                        uploadPhoto(photoFile, filename);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -607,7 +608,7 @@ public class MainActivity extends AppCompatActivity
 
     private void uploadTrack(String filename, String trackName) throws FileNotFoundException {
         StorageReference storageRef = storage.getReference();
-        StorageReference trackRef = storageRef.child("tracks/"+trackName);
+        StorageReference trackRef = storageRef.child("tracks/" + trackName);
 
         InputStream stream = new FileInputStream(new File(filename));
 
@@ -636,43 +637,24 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private boolean uploadPhoto() {
-        return false;
-    }
+    private void uploadPhoto(String photoFile, String filename) throws FileNotFoundException {
+        StorageReference storageRef = storage.getReference();
+        StorageReference trackRef = storageRef.child("photos/" + photoFile);
 
-    class WebService_uploadPhoto extends AsyncTask<String, String, String> {
-        private Activity context;
+        InputStream stream = new FileInputStream(new File(filename));
 
-        WebService_uploadPhoto(Activity context) {
-            this.context = context;
-        }
-
-        protected void onPreExecute() {
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            String result;
-
-            if (uploadPhoto())
-                result = "OK";
-            else
-                result = "ERROR";
-            return result;
-        }
-
-        protected void onPostExecute(String result) {
-            if (result.equals("OK")) {
-                Toast.makeText(context, "Fotografía guardada", Toast.LENGTH_SHORT).show();
-                login = true;
-                Intent mainIntent = new Intent().setClass(
-                        MainActivity.this, MainActivity.class);
-                mainIntent.putExtra("login", login);
-                startActivity(mainIntent);
-                finish();
-            } else
-                Toast.makeText(context, "Error, no se ha podido guardar la foto", Toast.LENGTH_SHORT).show();
-        }
+        uploadTask = trackRef.putStream(stream);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Toast.makeText(MainActivity.this, "Subido", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 // Fin métodos fotos georreferenciadas
 // ----------------------------------------------------------------------------------------------------------------
