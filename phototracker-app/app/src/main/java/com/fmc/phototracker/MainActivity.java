@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity
 
     Boolean login;
     Bundle bundle;
+    String key;
 
     MapView myOpenMapView;
     IMapController myMapController;
@@ -121,6 +122,7 @@ public class MainActivity extends AppCompatActivity
         bundle = getIntent().getExtras();
         assert bundle != null;
         login = bundle.getBoolean("login");
+        key = bundle.getString("key");
 
         initializeMap();
         registerLocationListener();
@@ -611,7 +613,7 @@ public class MainActivity extends AppCompatActivity
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(MainActivity.this, "Subido", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Ruta guardada", Toast.LENGTH_SHORT).show();
             }
         });
     }

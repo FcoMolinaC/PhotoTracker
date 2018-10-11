@@ -151,6 +151,12 @@ public class LoginActivity extends AppCompatActivity {
                                 Intent mainIntent = new Intent().setClass(
                                         LoginActivity.this, MainActivity.class);
                                 mainIntent.putExtra("login", login);
+
+                                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                                    String key = child.getKey();
+                                    mainIntent.putExtra("key", key);
+                                }
+
                                 startActivity(mainIntent);
                                 finish();
                             } else {
