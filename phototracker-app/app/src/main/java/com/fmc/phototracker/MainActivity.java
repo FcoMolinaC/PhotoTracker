@@ -70,15 +70,24 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import com.fmc.phototracker.model.User;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
-
     Boolean login;
     Bundle bundle;
     String key;
+    String track_name;
 
     MapView myOpenMapView;
     IMapController myMapController;
@@ -103,6 +112,7 @@ public class MainActivity extends AppCompatActivity
 
     private UploadTask uploadTask;
     FirebaseStorage storage = FirebaseStorage.getInstance();
+    private DatabaseReference mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -520,7 +530,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 fabRecord.setVisibility(View.INVISIBLE);
                 fabTrack.setVisibility(View.VISIBLE);
-                String track_name = trackName.getText().toString();
+                track_name = trackName.getText().toString();
                 if (trackPrivate.isChecked()) {
                     private_track = true;
                 }
@@ -598,9 +608,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void uploadTrack(String filename, String trackName) throws FileNotFoundException {
+    private void uploadTrack(String filename, final String trackName) throws FileNotFoundException {
         StorageReference storageRef = storage.getReference();
-        StorageReference trackRef = storageRef.child("tracks/" + trackName);
+        final StorageReference trackRef = storageRef.child("tracks/" + trackName);
 
         InputStream stream = new FileInputStream(new File(filename));
 
@@ -613,6 +623,18 @@ public class MainActivity extends AppCompatActivity
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                mDatabase = FirebaseDatabase.getInstance().getReference();
+
+                String path = trackRef.getDownloadUrl().toString();
+
+                DatabaseReference ref = mDatabase.child("users");
+                DatabaseReference trackRef = ref.child(key).child("tracks");
+
+                Map<String, Object> track = new HashMap<>();
+                track.put("Track_" + track_name, path);
+
+                trackRef.updateChildren(track);
+
                 Toast.makeText(MainActivity.this, "Ruta guardada", Toast.LENGTH_SHORT).show();
             }
         });

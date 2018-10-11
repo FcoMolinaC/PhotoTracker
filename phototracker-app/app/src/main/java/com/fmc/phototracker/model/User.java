@@ -1,12 +1,17 @@
 package com.fmc.phototracker.model;
 
+import com.google.firebase.database.Exclude;
+
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class User {
     private String username;
     private String password;
     private String email;
-    //private int[] tracks;
+    public Map<String, String> tracks = new HashMap<>();
+    //private String[] tracks;
     //private int[] photo;
 
     public User() {
@@ -16,7 +21,6 @@ public class User {
         this.username = username;
         this.password = password;
         this.email = email;
-        //this.tracks = tracks;
         //this.photo = photo;
     }
 
@@ -52,15 +56,15 @@ public class User {
         this.email = email;
     }
 
-    /*public int[] getTracks() {
+    /*public String[] getTracks() {
         return tracks;
     }
 
-    public void setTracks(int[] tracks) {
+    public void setTracks(String[] tracks) {
         this.tracks = tracks;
     }
 
-    public int[] getPhoto() {
+    /*public int[] getPhoto() {
         return photo;
     }
 
@@ -75,5 +79,16 @@ public class User {
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
                 '}';
+    }
+
+    @Exclude
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("username", username);
+        result.put("password", password);
+        result.put("email", email);
+        result.put("tracks", tracks);
+
+        return result;
     }
 }

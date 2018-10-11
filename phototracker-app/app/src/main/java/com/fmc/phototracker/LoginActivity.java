@@ -31,6 +31,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText etEmail;
     boolean login;
     private DatabaseReference dbUsers;
+    String key;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,7 +154,7 @@ public class LoginActivity extends AppCompatActivity {
                                 mainIntent.putExtra("login", login);
 
                                 for (DataSnapshot child : dataSnapshot.getChildren()) {
-                                    String key = child.getKey();
+                                    key = child.getKey();
                                     mainIntent.putExtra("key", key);
                                 }
 
@@ -197,15 +198,14 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, "El registro se ha completado correctamente", Toast.LENGTH_SHORT).show();
                     User new_user = new User(name, password, email);
                     DatabaseReference pushRef = dbUsers.push();
-                    String push_id = pushRef.getKey();
+                    key = pushRef.getKey();
                     pushRef.setValue(new_user);
 
                     login = true;
                     Intent mainIntent = new Intent().setClass(
                             LoginActivity.this, MainActivity.class);
                     mainIntent.putExtra("login", login);
-                    mainIntent.putExtra("id", push_id);
-                    mainIntent.putExtra("email", email);
+                    mainIntent.putExtra("key", key);
                     startActivity(mainIntent);
                     finish();
                 }
