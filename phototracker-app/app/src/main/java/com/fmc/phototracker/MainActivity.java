@@ -44,6 +44,8 @@ import android.widget.Toast;
 import com.fmc.phototracker.services.RegisterTrack;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -74,13 +76,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import com.fmc.phototracker.model.User;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
@@ -113,6 +108,8 @@ public class MainActivity extends AppCompatActivity
     private UploadTask uploadTask;
     FirebaseStorage storage = FirebaseStorage.getInstance();
     private DatabaseReference mDatabase;
+
+    SimpleDateFormat date = new SimpleDateFormat("yyyyy-mm-dd hh:mm:ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -631,7 +628,7 @@ public class MainActivity extends AppCompatActivity
                 DatabaseReference trackRef = ref.child(key).child("tracks");
 
                 Map<String, Object> track = new HashMap<>();
-                track.put("Track_" + track_name, path);
+                track.put("Track_" + track_name + "_" + date.format(new Date(location.getTime())), path);
 
                 trackRef.updateChildren(track);
 
@@ -653,11 +650,11 @@ public class MainActivity extends AppCompatActivity
 
     private void uploadPhoto(String photoFile, String filename) throws FileNotFoundException {
         StorageReference storageRef = storage.getReference();
-        StorageReference trackRef = storageRef.child("photos/" + photoFile);
+        final StorageReference photoRef = storageRef.child("photos/" + photoFile);
 
         InputStream stream = new FileInputStream(new File(filename));
 
-        uploadTask = trackRef.putStream(stream);
+        uploadTask = photoRef.putStream(stream);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
@@ -666,7 +663,20 @@ public class MainActivity extends AppCompatActivity
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Toast.makeText(MainActivity.this, "Subido", Toast.LENGTH_SHORT).show();
+                mDatabase = FirebaseDatabase.getInstance().getReference();
+
+                String path = photoRef.getDownloadUrl().toString();
+
+                DatabaseReference ref = mDatabase.child("users");
+                DatabaseReference trackRef = ref.child(key).child("photos");
+
+                Map<String, Object> photo = new HashMap<>();
+                //Todo-Añadir coordenadas a la foto
+                photo.put("Track_" + track_name + "_" + date.format(new Date(location.getTime())), path);
+
+                trackRef.updateChildren(photo);
+
+                Toast.makeText(MainActivity.this, "Foto guardada", Toast.LENGTH_SHORT).show();
             }
         });
     }
