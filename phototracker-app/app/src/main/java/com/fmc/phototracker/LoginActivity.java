@@ -23,6 +23,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.fmc.phototracker.model.User;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+
 public class LoginActivity extends AppCompatActivity {
     EditText usertext;
     EditText passtext;
@@ -157,7 +159,7 @@ public class LoginActivity extends AppCompatActivity {
                                     key = child.getKey();
                                     mainIntent.putExtra("key", key);
                                 }
-
+                                
                                 startActivity(mainIntent);
                                 finish();
                             } else {

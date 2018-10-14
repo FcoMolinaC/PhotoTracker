@@ -71,6 +71,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -108,8 +109,6 @@ public class MainActivity extends AppCompatActivity
     private UploadTask uploadTask;
     FirebaseStorage storage = FirebaseStorage.getInstance();
     private DatabaseReference mDatabase;
-
-    SimpleDateFormat date = new SimpleDateFormat("yyyyy-mm-dd hh:mm:ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -620,6 +619,8 @@ public class MainActivity extends AppCompatActivity
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+
                 mDatabase = FirebaseDatabase.getInstance().getReference();
 
                 String path = trackRef.getDownloadUrl().toString();
@@ -628,7 +629,7 @@ public class MainActivity extends AppCompatActivity
                 DatabaseReference trackRef = ref.child(key).child("tracks");
 
                 Map<String, Object> track = new HashMap<>();
-                track.put("Track_" + track_name + "_" + date.format(new Date(location.getTime())), path);
+                track.put(track_name + "_" + timeStamp, path);
 
                 trackRef.updateChildren(track);
 
@@ -663,6 +664,8 @@ public class MainActivity extends AppCompatActivity
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+
                 mDatabase = FirebaseDatabase.getInstance().getReference();
 
                 String path = photoRef.getDownloadUrl().toString();
@@ -672,7 +675,7 @@ public class MainActivity extends AppCompatActivity
 
                 Map<String, Object> photo = new HashMap<>();
                 //Todo-Añadir coordenadas a la foto
-                photo.put("Track_" + track_name + "_" + date.format(new Date(location.getTime())), path);
+                photo.put(track_name + "_" + timeStamp, path);
 
                 trackRef.updateChildren(photo);
 
