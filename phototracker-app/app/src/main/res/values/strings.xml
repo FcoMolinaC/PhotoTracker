@@ -11,7 +11,7 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="botonExplora">¡Explora!</string>
     <string name="botonSesion">Inicia sesión</string>
-    <string name="user">Usuario o correo electrónico</string>
+    <string name="user">Correo electrónico</string>
     <string name="password">Contraseña</string>
     <string name="o">o</string>
     <string name="account">¿No tienes cuenta?</string>

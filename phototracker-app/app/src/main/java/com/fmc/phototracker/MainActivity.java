@@ -31,6 +31,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -42,8 +43,11 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.fmc.phototracker.services.RegisterTrack;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -110,6 +114,8 @@ public class MainActivity extends AppCompatActivity
     private UploadTask uploadTask;
     FirebaseStorage storage = FirebaseStorage.getInstance();
 
+    private FirebaseAuth auth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,6 +134,8 @@ public class MainActivity extends AppCompatActivity
         bundle = getIntent().getExtras();
         assert bundle != null;
         login = bundle.getBoolean("login");
+
+        auth = FirebaseAuth.getInstance();
 
         initializeMap();
         registerLocationListener();
@@ -305,8 +313,8 @@ public class MainActivity extends AppCompatActivity
     private void registerRequest() {
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.register_dialog, null);
-        final EditText etUsername = alertLayout.findViewById(R.id.username);
-        final EditText etEmail = alertLayout.findViewById(R.id.password);
+        final EditText etEmail = alertLayout.findViewById(R.id.email);
+        final EditText etPassword = alertLayout.findViewById(R.id.password);
 
         AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
         alert.setTitle("Regístrate y podrás grabar rutas y subir fotos");
@@ -323,9 +331,43 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String user = etUsername.getText().toString();
-                String pass = etEmail.getText().toString();
-                Toast.makeText(getBaseContext(), "Registro completo", Toast.LENGTH_SHORT).show();
+                String email = etEmail.getText().toString();
+                String password = etPassword.getText().toString();
+
+                if (TextUtils.isEmpty(email)) {
+                    Toast.makeText(getApplicationContext(), "Tienes que introducir un email válido", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (TextUtils.isEmpty(password)) {
+                    Toast.makeText(getApplicationContext(), "Tienes que introducir una contraseña", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (password.length() < 6) {
+                    Toast.makeText(getApplicationContext(), "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                auth.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(MainActivity.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                Toast.makeText(MainActivity.this, "Registrado con éxito" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
+
+                                if (!task.isSuccessful()) {
+                                    Toast.makeText(MainActivity.this, "Registro fallido" + task.getException(),
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    login = true;
+                                    Intent mainIntent = new Intent(MainActivity.this, MainActivity.class);
+                                    mainIntent.putExtra("login", login);
+                                    startActivity(mainIntent);
+                                    finish();
+                                }
+                            }
+                        });
+
                 login = true;
             }
         });

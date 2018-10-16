@@ -25,7 +25,6 @@ import com.google.firebase.auth.FirebaseAuth;
 public class LoginActivity extends AppCompatActivity {
     EditText usertext;
     EditText passtext;
-    EditText etUsername;
     EditText etPassword;
     EditText etEmail;
     boolean login;
@@ -105,7 +104,6 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View view) {
                 LayoutInflater inflater = getLayoutInflater();
                 View alertLayout = inflater.inflate(R.layout.register_dialog, null);
-                etUsername = alertLayout.findViewById(R.id.username);
                 etPassword = alertLayout.findViewById(R.id.password);
                 etEmail = alertLayout.findViewById(R.id.email);
 
