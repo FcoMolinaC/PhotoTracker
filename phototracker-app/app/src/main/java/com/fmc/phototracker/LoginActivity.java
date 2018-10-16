@@ -5,7 +5,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -15,15 +17,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import com.fmc.phototracker.model.User;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.ArrayList;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
     EditText usertext;
@@ -32,8 +29,8 @@ public class LoginActivity extends AppCompatActivity {
     EditText etPassword;
     EditText etEmail;
     boolean login;
-    private DatabaseReference dbUsers;
-    String key;
+
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,19 +60,43 @@ public class LoginActivity extends AppCompatActivity {
         textRegister.setTypeface(aganelight);
         button_register.setTypeface(aganebold);
 
+        auth = FirebaseAuth.getInstance();
+
         button_sesion.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String username = usertext.getText().toString();
-                String password = passtext.getText().toString();
+                String email = usertext.getText().toString();
+                final String password = passtext.getText().toString();
 
-                if (username.matches("")) {
-                    Toast.makeText(LoginActivity.this, "Tienes que introducir un usuario válido", Toast.LENGTH_SHORT).show();
-                } else if (password.matches("")) {
-                    Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña", Toast.LENGTH_SHORT).show();
-                } else {
-                    login();
+                if (TextUtils.isEmpty(email)) {
+                    Toast.makeText(getApplicationContext(), "Tienes que introducir un email válido", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                if (TextUtils.isEmpty(password)) {
+                    Toast.makeText(getApplicationContext(), "Tienes que introducir una contraseña", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                auth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (!task.isSuccessful()) {
+                                    if (password.length() < 6) {
+                                        Toast.makeText(LoginActivity.this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(LoginActivity.this, "La contraseña no es válida", Toast.LENGTH_LONG).show();
+                                    }
+                                } else {
+                                    login = true;
+                                    Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
+                                    mainIntent.putExtra("login", login);
+                                    startActivity(mainIntent);
+                                    finish();
+                                }
+                            }
+                        });
             }
         });
 
@@ -102,19 +123,42 @@ public class LoginActivity extends AppCompatActivity {
                 alert.setPositiveButton("Registrar", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String username = etUsername.getText().toString();
                         String password = etPassword.getText().toString();
                         String email = etEmail.getText().toString();
 
-                        if (email.matches("")) {
-                            Toast.makeText(LoginActivity.this, "Tienes que introducir un email válido\nInténtalo de nuevo", Toast.LENGTH_SHORT).show();
-                        } else if (username.matches("")) {
-                            Toast.makeText(LoginActivity.this, "Tienes que introducir un usuario\nInténtalo de nuevo", Toast.LENGTH_SHORT).show();
-                        } else if (password.matches("")) {
-                            Toast.makeText(LoginActivity.this, "Tienes que introducir la contraseña\nInténtalo de nuevo", Toast.LENGTH_SHORT).show();
-                        } else {
-                            register();
+                        if (TextUtils.isEmpty(email)) {
+                            Toast.makeText(getApplicationContext(), "Tienes que introducir un email válido", Toast.LENGTH_SHORT).show();
+                            return;
                         }
+
+                        if (TextUtils.isEmpty(password)) {
+                            Toast.makeText(getApplicationContext(), "Tienes que introducir una contraseña", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        if (password.length() < 6) {
+                            Toast.makeText(getApplicationContext(), "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        auth.createUserWithEmailAndPassword(email, password)
+                                .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<AuthResult> task) {
+                                        Toast.makeText(LoginActivity.this, "Registrado con éxito" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
+
+                                        if (!task.isSuccessful()) {
+                                            Toast.makeText(LoginActivity.this, "Registro fallido" + task.getException(),
+                                                    Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            login = true;
+                                            Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
+                                            mainIntent.putExtra("login", login);
+                                            startActivity(mainIntent);
+                                            finish();
+                                        }
+                                    }
+                                });
                     }
                 });
                 AlertDialog dialog = alert.create();
@@ -131,91 +175,6 @@ public class LoginActivity extends AppCompatActivity {
                 mainIntent.putExtra("login", login);
                 startActivity(mainIntent);
                 finish();
-            }
-        });
-    }
-
-    private void login() {
-        String user = usertext.getText().toString();
-
-        dbUsers = FirebaseDatabase.getInstance().getReference().child("users");
-        dbUsers.orderByChild("username").equalTo(user).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String password = passtext.getText().toString();
-
-                if (dataSnapshot.exists()) {
-                    dbUsers.orderByChild("password").equalTo(password).addListenerForSingleValueEvent(new ValueEventListener() {
-
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            if (dataSnapshot.exists()) {
-                                login = true;
-                                Intent mainIntent = new Intent().setClass(
-                                        LoginActivity.this, MainActivity.class);
-                                mainIntent.putExtra("login", login);
-
-                                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                                    key = child.getKey();
-                                    mainIntent.putExtra("key", key);
-                                }
-                                
-                                startActivity(mainIntent);
-                                finish();
-                            } else {
-                                Toast.makeText(LoginActivity.this, "Error, la contraseña no es correcta", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                        }
-                    });
-                } else {
-                    Toast.makeText(LoginActivity.this, "Error, el nombre de usuario no está registrado", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-    }
-
-
-    private void register() {
-        String email = etEmail.getText().toString();
-
-        dbUsers = FirebaseDatabase.getInstance().getReference().child("users");
-        dbUsers.orderByChild("email").equalTo(email).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String email = etEmail.getText().toString();
-                String name = etUsername.getText().toString();
-                String password = etPassword.getText().toString();
-
-                if (dataSnapshot.exists()) {
-                    Toast.makeText(LoginActivity.this, "El email introducido ya está registrado\nInténtelo de nuevo con otro email", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(LoginActivity.this, "El registro se ha completado correctamente", Toast.LENGTH_SHORT).show();
-                    User new_user = new User(name, password, email);
-                    DatabaseReference pushRef = dbUsers.push();
-                    key = pushRef.getKey();
-                    pushRef.setValue(new_user);
-
-                    login = true;
-                    Intent mainIntent = new Intent().setClass(
-                            LoginActivity.this, MainActivity.class);
-                    mainIntent.putExtra("login", login);
-                    mainIntent.putExtra("key", key);
-                    startActivity(mainIntent);
-                    finish();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
             }
         });
     }

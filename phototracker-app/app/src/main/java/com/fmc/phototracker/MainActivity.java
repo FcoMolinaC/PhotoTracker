@@ -44,6 +44,8 @@ import android.widget.Toast;
 import com.fmc.phototracker.services.RegisterTrack;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -82,7 +84,6 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
     Boolean login;
     Bundle bundle;
-    String key;
     String track_name;
 
     MapView myOpenMapView;
@@ -108,7 +109,6 @@ public class MainActivity extends AppCompatActivity
 
     private UploadTask uploadTask;
     FirebaseStorage storage = FirebaseStorage.getInstance();
-    private DatabaseReference mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,7 +128,6 @@ public class MainActivity extends AppCompatActivity
         bundle = getIntent().getExtras();
         assert bundle != null;
         login = bundle.getBoolean("login");
-        key = bundle.getString("key");
 
         initializeMap();
         registerLocationListener();
@@ -621,17 +620,15 @@ public class MainActivity extends AppCompatActivity
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
-                mDatabase = FirebaseDatabase.getInstance().getReference();
-
                 String path = trackRef.getDownloadUrl().toString();
 
-                DatabaseReference ref = mDatabase.child("users");
-                DatabaseReference trackRef = ref.child(key).child("tracks");
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                DatabaseReference ref = FirebaseDatabase.getInstance().getReference(user.getUid());
 
                 Map<String, Object> track = new HashMap<>();
                 track.put(track_name + "_" + timeStamp, path);
 
-                trackRef.updateChildren(track);
+                ref.child("/tracks").updateChildren(track);
 
                 Toast.makeText(MainActivity.this, "Ruta guardada", Toast.LENGTH_SHORT).show();
             }
@@ -666,18 +663,16 @@ public class MainActivity extends AppCompatActivity
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
-                mDatabase = FirebaseDatabase.getInstance().getReference();
-
                 String path = photoRef.getDownloadUrl().toString();
 
-                DatabaseReference ref = mDatabase.child("users");
-                DatabaseReference trackRef = ref.child(key).child("photos");
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                DatabaseReference ref = FirebaseDatabase.getInstance().getReference(user.getUid());
 
                 Map<String, Object> photo = new HashMap<>();
                 //Todo-Añadir coordenadas a la foto
                 photo.put(track_name + "_" + timeStamp, path);
 
-                trackRef.updateChildren(photo);
+                ref.child("/photos").updateChildren(photo);
 
                 Toast.makeText(MainActivity.this, "Foto guardada", Toast.LENGTH_SHORT).show();
             }
