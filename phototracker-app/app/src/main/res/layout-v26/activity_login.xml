@@ -11,9 +11,7 @@
         android:id="@+id/TxtInputUserWrapper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp">
+        android:layout_marginTop="60dp">
 
         <EditText
             android:id="@+id/TxtInputUser"
@@ -21,6 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
+            android:autofillHints=""
             android:hint="@string/user"
             android:inputType="text"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
@@ -35,9 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/TxtInputUserWrapper"
         app:passwordToggleEnabled="true"
-        app:passwordToggleTint="#e5dcd8"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp">
+        app:passwordToggleTint="@android:color/white">
 
         <EditText
             android:id="@+id/TxtInputPass"
@@ -45,6 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_alignStart="@+id/TxtInputUserWrapper"
             android:layout_marginTop="12dp"
+            android:autofillHints=""
             android:hint="@string/password"
             android:inputType="textPassword"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"

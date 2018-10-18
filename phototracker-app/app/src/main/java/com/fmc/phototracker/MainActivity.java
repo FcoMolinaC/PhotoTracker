@@ -107,11 +107,14 @@ public class MainActivity extends AppCompatActivity
     Drawable myCurrentLocationMarker;
 
     Boolean private_track = false;
+    Boolean tracking = false;
+    String track_id;
     ArrayList<Location> track = new ArrayList<>();
 
     private static final int CAMERA_REQUEST = 1888;
 
     private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int PERMISSION_REQUEST_LOCATION = 99;
 
     private FloatingActionButton fabRecord, fabTrack, fabPosition, fabPhoto;
 
@@ -150,11 +153,15 @@ public class MainActivity extends AppCompatActivity
 
         if (Build.VERSION.SDK_INT >= 23) {
             if (checkPermission()) {
+                // Permiso aceptado
             } else {
                 requestPermission();
             }
         } else {
+            // No es necesario permiso extra
         }
+
+        checkLocationPermission();
 
         fabTrack.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("NewApi")
@@ -168,6 +175,11 @@ public class MainActivity extends AppCompatActivity
                             startService(TrackIntent);
                             fabTrack.setVisibility(View.INVISIBLE);
                             fabRecord.setVisibility(View.VISIBLE);
+
+                            tracking = true;
+                            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+                            track_id = "track_" + timeStamp;
+
                             Snackbar.make(view, "Comenzando a grabar recorrido", Snackbar.LENGTH_LONG)
                                     .setAction("Action", null).show();
                         } else {
@@ -194,11 +206,13 @@ public class MainActivity extends AppCompatActivity
         fabPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (login) {
+                if (login && tracking) {
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(cameraIntent, CAMERA_REQUEST);
-                } else {
+                } else if (!login) {
                     registerRequest();
+                } else if (!tracking) {
+                    Toast.makeText(MainActivity.this, "Tienes que estar grabando una ruta para añadirle fotos", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -352,6 +366,26 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
     }
+
+    private void checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                new AlertDialog.Builder(this)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_LOCATION);
+                            }
+                        })
+                        .create()
+                        .show();
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_LOCATION);
+            }
+        } else {
+        }
+    }
+
 
     private void registerRequest() {
         LayoutInflater inflater = getLayoutInflater();
@@ -703,15 +737,13 @@ public class MainActivity extends AppCompatActivity
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-
                 String path = trackRef.getDownloadUrl().toString();
 
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 DatabaseReference ref = FirebaseDatabase.getInstance().getReference(user.getUid());
 
                 Map<String, Object> track = new HashMap<>();
-                track.put(track_name + "_" + timeStamp, path);
+                track.put(track_name + "_" + track_id, path);
 
                 ref.child("/tracks").updateChildren(track);
 
@@ -746,8 +778,6 @@ public class MainActivity extends AppCompatActivity
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-
                 String path = photoRef.getDownloadUrl().toString();
 
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -755,7 +785,7 @@ public class MainActivity extends AppCompatActivity
 
                 Map<String, Object> photo = new HashMap<>();
                 //Todo-Añadir coordenadas a la foto
-                photo.put(track_name + "_" + timeStamp, path);
+                photo.put("photo" + "_" + track_id, path);
 
                 ref.child("/photos").updateChildren(photo);
 
