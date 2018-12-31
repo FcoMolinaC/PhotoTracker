@@ -40,8 +40,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.CheckBox;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.fmc.phototracker.services.RegisterTrack;
@@ -90,7 +92,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
     Boolean login;
     Bundle bundle;
-    String track_name;
+    String track_name, trackType, track_id;
 
     MapView myOpenMapView;
     IMapController myMapController;
@@ -106,9 +108,7 @@ public class MainActivity extends AppCompatActivity
     OverlayItem myLocationOverlayItem;
     Drawable myCurrentLocationMarker;
 
-    Boolean private_track = false;
     Boolean tracking = false;
-    String track_id;
     ArrayList<Location> track = new ArrayList<>();
 
     private static final int CAMERA_REQUEST = 1888;
@@ -622,7 +622,20 @@ public class MainActivity extends AppCompatActivity
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.register_track, null);
         final EditText trackName = alertLayout.findViewById(R.id.track_name);
-        final CheckBox trackPrivate = alertLayout.findViewById(R.id.track_private);
+
+        final Spinner spinner = alertLayout.findViewById(R.id.trackType);
+        String[] types = {"Ciclismo", "Senderismo", "Carrera a pie", "Caminata"};
+        spinner.setAdapter(new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_spinner_dropdown_item, types));
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
 
         AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
         alert.setTitle("Guardar ruta");
@@ -645,9 +658,7 @@ public class MainActivity extends AppCompatActivity
                 fabRecord.setVisibility(View.INVISIBLE);
                 fabTrack.setVisibility(View.VISIBLE);
                 track_name = trackName.getText().toString();
-                if (trackPrivate.isChecked()) {
-                    private_track = true;
-                }
+                trackType = spinner.getSelectedItem().toString();
                 if (track_name.matches("")) {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmddhhmmss");
                     String date = dateFormat.format(new Date());
@@ -726,6 +737,8 @@ public class MainActivity extends AppCompatActivity
         StorageReference storageRef = storage.getReference();
         final StorageReference trackRef = storageRef.child("tracks/" + trackName);
 
+        final DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+
         InputStream stream = new FileInputStream(new File(filename));
 
         uploadTask = trackRef.putStream(stream);
@@ -743,9 +756,21 @@ public class MainActivity extends AppCompatActivity
                 DatabaseReference ref = FirebaseDatabase.getInstance().getReference(user.getUid());
 
                 Map<String, Object> track = new HashMap<>();
-                track.put(track_name + "_" + track_id, path);
+
+                String trackName = track_name + "_" + track_id;
+                track.put(trackName, track_id);
 
                 ref.child("/tracks").updateChildren(track);
+
+                Map<String, Object> trackData = new HashMap<>();
+                trackData.put("/name", track_name);
+                trackData.put("/url", path);
+                //todo: ´Sustituir por longitud real
+                trackData.put("/long", "37.7");
+                trackData.put("/date", df.format(new Date(location.getTime())));
+                trackData.put("/type", trackType);
+
+                ref.child("/tracks/" + trackName).updateChildren(trackData);
 
                 Toast.makeText(MainActivity.this, "Ruta guardada", Toast.LENGTH_SHORT).show();
             }
