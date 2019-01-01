@@ -17,6 +17,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,6 +48,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.fmc.phototracker.services.RegisterTrack;
+import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -92,7 +94,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
     Boolean login;
     Bundle bundle;
-    String track_name, trackType, track_id;
+    String track_name, trackType, track_id, downloadUrl;
 
     MapView myOpenMapView;
     IMapController myMapController;
@@ -736,22 +738,33 @@ public class MainActivity extends AppCompatActivity
     private void uploadTrack(String filename, final String trackName) throws FileNotFoundException {
         StorageReference storageRef = storage.getReference();
         final StorageReference trackRef = storageRef.child("tracks/" + trackName);
-
         final DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
         InputStream stream = new FileInputStream(new File(filename));
-
         uploadTask = trackRef.putStream(stream);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                String path = trackRef.getDownloadUrl().toString();
 
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if (!task.isSuccessful()) {
+                    throw task.getException();
+                }
+                return trackRef.getDownloadUrl();
+            }
+        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUri = task.getResult();
+                    downloadUrl = downloadUri.toString();
+                } else {
+                    Toast.makeText(MainActivity.this, "Error subiendo ruta", Toast.LENGTH_SHORT).show();
+                    Log.e("uploadTrack", "Error creando archivo");
+                }
+            }
+        }).addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 DatabaseReference ref = FirebaseDatabase.getInstance().getReference(user.getUid());
 
@@ -764,7 +777,8 @@ public class MainActivity extends AppCompatActivity
 
                 Map<String, Object> trackData = new HashMap<>();
                 trackData.put("/name", track_name);
-                trackData.put("/url", path);
+                trackData.put("/url", downloadUrl);
+
                 //todo: ´Sustituir por longitud real
                 trackData.put("/long", "37.7");
                 trackData.put("/date", df.format(new Date(location.getTime())));
@@ -774,8 +788,15 @@ public class MainActivity extends AppCompatActivity
 
                 Toast.makeText(MainActivity.this, "Ruta guardada", Toast.LENGTH_SHORT).show();
             }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(MainActivity.this, "Error subiendo ruta", Toast.LENGTH_SHORT).show();
+                Log.e("uploadTrack", "Error creando archivo", e);
+            }
         });
     }
+    
     // Fin métodos para mapas y track
     // ----------------------------------------------------------------------------------------------------------------
 
