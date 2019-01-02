@@ -207,9 +207,19 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 if (login) {
-                    Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(cameraIntent, CAMERA_REQUEST);
-                    photo_id = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+                    if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                        if (accuracy <= 50.0) {
+                            Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                            startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                            photo_id = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+                        } else {
+                            Snackbar.make(view, "No hay señal gps suficiente para geolocalizar la foto", Snackbar.LENGTH_LONG)
+                                    .setAction("Action", null).show();
+                        }
+                    } else {
+                        Snackbar.make(view, "GPS desactivado. Actívalo para poder geolocalizar tus fotos", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    }
                 } else {
                     registerRequest();
                 }
@@ -843,6 +853,17 @@ public class MainActivity extends AppCompatActivity
                 Map<String, Object> photoData = new HashMap<>();
                 photoData.put("/date", df.format(new Date(location.getTime())));
                 photoData.put("/url", downloadUrl);
+
+                if (location != null) {
+                    lat = location.getLatitude();
+                    lon = location.getLongitude();
+
+                    photoData.put("/latitude", lat);
+                    photoData.put("/longitude", lon);
+                } else {
+                    Log.e("uploadTrack", "Coordenadas no disponibles");
+                }
+
                 ref.child("/photos/" + photoName).updateChildren(photoData);
 
                 Toast.makeText(MainActivity.this, "Foto guardada", Toast.LENGTH_SHORT).show();
