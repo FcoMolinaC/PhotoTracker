@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
     Boolean login;
     Bundle bundle;
-    String track_name, trackType, track_id, downloadUrl;
+    String track_name, trackType, track_id, photo_id, downloadUrl;
 
     MapView myOpenMapView;
     IMapController myMapController;
@@ -110,7 +110,6 @@ public class MainActivity extends AppCompatActivity
     OverlayItem myLocationOverlayItem;
     Drawable myCurrentLocationMarker;
 
-    Boolean tracking = false;
     ArrayList<Location> track = new ArrayList<>();
 
     private static final int CAMERA_REQUEST = 1888;
@@ -178,7 +177,6 @@ public class MainActivity extends AppCompatActivity
                             fabTrack.setVisibility(View.INVISIBLE);
                             fabRecord.setVisibility(View.VISIBLE);
 
-                            tracking = true;
                             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
                             track_id = "track_" + timeStamp;
 
@@ -208,13 +206,12 @@ public class MainActivity extends AppCompatActivity
         fabPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (login && tracking) {
+                if (login) {
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(cameraIntent, CAMERA_REQUEST);
-                } else if (!login) {
+                    photo_id = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+                } else {
                     registerRequest();
-                } else if (!tracking) {
-                    Toast.makeText(MainActivity.this, "Tienes que estar grabando una ruta para añadirle fotos", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -769,21 +766,18 @@ public class MainActivity extends AppCompatActivity
                 DatabaseReference ref = FirebaseDatabase.getInstance().getReference(user.getUid());
 
                 Map<String, Object> track = new HashMap<>();
-
                 String trackName = track_name + "_" + track_id;
                 track.put(trackName, track_id);
-
                 ref.child("/tracks").updateChildren(track);
 
                 Map<String, Object> trackData = new HashMap<>();
                 trackData.put("/name", track_name);
+                trackData.put("/trackID", track_id);
                 trackData.put("/url", downloadUrl);
-
                 //todo: ´Sustituir por longitud real
                 trackData.put("/long", "37.7");
                 trackData.put("/date", df.format(new Date(location.getTime())));
                 trackData.put("/type", trackType);
-
                 ref.child("/tracks/" + trackName).updateChildren(trackData);
 
                 Toast.makeText(MainActivity.this, "Ruta guardada", Toast.LENGTH_SHORT).show();
@@ -796,7 +790,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
-    
+
     // Fin métodos para mapas y track
     // ----------------------------------------------------------------------------------------------------------------
 
@@ -808,34 +802,56 @@ public class MainActivity extends AppCompatActivity
         return new File(sdDir, "PhotoTrack");
     }
 
-
     private void uploadPhoto(String photoFile, String filename) throws FileNotFoundException {
         StorageReference storageRef = storage.getReference();
         final StorageReference photoRef = storageRef.child("photos/" + photoFile);
+        final DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
         InputStream stream = new FileInputStream(new File(filename));
-
         uploadTask = photoRef.putStream(stream);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                String path = photoRef.getDownloadUrl().toString();
 
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if (!task.isSuccessful()) {
+                    throw task.getException();
+                }
+                return photoRef.getDownloadUrl();
+            }
+        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUri = task.getResult();
+                    downloadUrl = downloadUri.toString();
+                } else {
+                    Toast.makeText(MainActivity.this, "Error subiendo ruta", Toast.LENGTH_SHORT).show();
+                    Log.e("uploadTrack", "Error creando archivo");
+                }
+            }
+        }).addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 DatabaseReference ref = FirebaseDatabase.getInstance().getReference(user.getUid());
 
                 Map<String, Object> photo = new HashMap<>();
-                //Todo-Añadir coordenadas a la foto
-                photo.put("photo" + "_" + track_id, path);
-
+                String photoName = "photo_" + photo_id;
+                photo.put(photoName, photo_id);
                 ref.child("/photos").updateChildren(photo);
 
+                Map<String, Object> photoData = new HashMap<>();
+                photoData.put("/date", df.format(new Date(location.getTime())));
+                photoData.put("/url", downloadUrl);
+                ref.child("/photos/" + photoName).updateChildren(photoData);
+
                 Toast.makeText(MainActivity.this, "Foto guardada", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(MainActivity.this, "Error subiendo foto", Toast.LENGTH_SHORT).show();
+                Log.e("uploadPhoto", "Error creando archivo", e);
             }
         });
     }
