@@ -48,6 +48,8 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.fmc.phototracker.services.RegisterTrack;
+import com.fmc.phototracker.util.SphericalUtil;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -81,6 +83,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -111,6 +114,7 @@ public class MainActivity extends AppCompatActivity
     Drawable myCurrentLocationMarker;
 
     ArrayList<Location> track = new ArrayList<>();
+    ArrayList<LatLng> trackLatLng = new ArrayList<>();
 
     private static final int CAMERA_REQUEST = 1888;
 
@@ -698,6 +702,8 @@ public class MainActivity extends AppCompatActivity
                 "<trk><name>" + name + "</name><trkseg>";
         StringBuilder segments = new StringBuilder();
         for (Location location : track) {
+            trackLatLng.add(new LatLng(location.getLatitude(), location.getLongitude()));
+
             segments
                     .append("<trkpt lat=\"")
                     .append(location.getLatitude())
@@ -747,6 +753,9 @@ public class MainActivity extends AppCompatActivity
         final StorageReference trackRef = storageRef.child("tracks/" + trackName);
         final DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
+        final DecimalFormat f = new DecimalFormat("##.00");
+        final double trackLong = SphericalUtil.computeLength(trackLatLng);
+
         InputStream stream = new FileInputStream(new File(filename));
         uploadTask = trackRef.putStream(stream);
 
@@ -784,8 +793,7 @@ public class MainActivity extends AppCompatActivity
                 trackData.put("/name", track_name);
                 trackData.put("/trackID", track_id);
                 trackData.put("/url", downloadUrl);
-                //todo: ´Sustituir por longitud real
-                trackData.put("/long", "37.7");
+                trackData.put("/long", f.format(trackLong));
                 trackData.put("/date", df.format(new Date(location.getTime())));
                 trackData.put("/type", trackType);
                 ref.child("/tracks/" + trackName).updateChildren(trackData);

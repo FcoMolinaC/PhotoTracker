@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.fmc.phototracker.MainActivity;
 import com.fmc.phototracker.R;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 
@@ -33,6 +34,7 @@ public class RegisterTrack extends Service
     long time = 0;
     float distance = 10;
     ArrayList<Location> track = new ArrayList<>();
+    ArrayList<LatLng> trackLatLng = new ArrayList<>();
 
     PowerManager mgr;
     PowerManager.WakeLock wakeLock;
@@ -74,6 +76,7 @@ public class RegisterTrack extends Service
     private void sendMessageToActivity(ArrayList track) {
         Intent intent = new Intent("intentTrack");
         intent.putExtra("Track", track);
+        intent.putExtra("TrackLatLng", trackLatLng);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
@@ -138,6 +141,7 @@ public class RegisterTrack extends Service
         //todo; bajar precision en modo produccion
         if (location.getAccuracy() < 10) {
             track.add(location);
+
             //todo: borrar la tostada en fase de producción
             Toast.makeText(this, "Punto almacenado\nLatitud: " + location.getLatitude() +
                             "\nLongitud: " + location.getLongitude() +
