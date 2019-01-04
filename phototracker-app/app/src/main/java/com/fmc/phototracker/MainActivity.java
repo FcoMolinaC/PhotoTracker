@@ -792,9 +792,10 @@ public class MainActivity extends AppCompatActivity
                 Map<String, Object> trackData = new HashMap<>();
                 trackData.put("/name", track_name);
                 trackData.put("/trackID", track_id);
+                trackData.put("/track", trackLatLng);
                 trackData.put("/url", downloadUrl);
                 trackData.put("/long", f.format(trackLong));
-                trackData.put("/date", df.format(new Date(location.getTime())));
+                trackData.put("/date", df.format(new Date()));
                 trackData.put("/type", trackType);
                 ref.child("/tracks/" + trackName).updateChildren(trackData);
 
