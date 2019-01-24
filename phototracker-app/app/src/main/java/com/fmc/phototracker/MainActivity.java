@@ -324,29 +324,35 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
+
         if (id == R.id.routes) {
             if (login) {
-                //todo: cargar las rutas del usuario cuando esté disponible la BBDD
-                Intent trackIntent = new Intent(MainActivity.this, TrackListActivity.class);
-                startActivity(trackIntent);
+                openWebURL("http://phototracker/tracks");
             } else {
                 registerRequest();
             }
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.photos) {
             if (login) {
-                //todo: mostrar las fotos del usuario cuando esté disponible la BBDD
-                Intent galleryIntent = new Intent(MainActivity.this, GalleryActivity.class);
-                startActivity(galleryIntent);
+                openWebURL("http://phototracker/photos");
             } else {
                 registerRequest();
             }
-        } else if (id == R.id.nav_explore) {
-            //todo: cargar las rutas públicas cuando estén disponibles
+        } else if (id == R.id.adjust) {
+            if (login) {
+                openWebURL("http://phototracker/adjust");
+            } else {
+                registerRequest();
+            }
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void openWebURL(String inURL) {
+        Intent browse = new Intent(Intent.ACTION_VIEW, Uri.parse(inURL));
+        startActivity(browse);
     }
 
     private boolean checkPermission() {
@@ -679,6 +685,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 Toast.makeText(getBaseContext(), "¡Ruta grabada!", Toast.LENGTH_SHORT).show();
                 generateGpx(track_name, track);
+                stopService(new Intent(MainActivity.this, RegisterTrack.class));
             }
         });
         AlertDialog dialog = alert.create();

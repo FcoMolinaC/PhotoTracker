@@ -40,18 +40,6 @@
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".GalleryActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
-            android:name=".PhotoActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
-            android:name=".TrackListActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
-            android:name=".TrackMapActivity"
-            android:configChanges="orientation|screenSize" />
 
         <service
             android:name=".services.RegisterTrack"

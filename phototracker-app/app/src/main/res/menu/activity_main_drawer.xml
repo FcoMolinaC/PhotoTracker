@@ -9,12 +9,12 @@
             android:icon="@drawable/ic_navigation_black_24dp"
             android:title="Mis rutas" />
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/photos"
             android:icon="@drawable/ic_menu_gallery"
             android:title="Mis fotos" />
         <item
-            android:id="@+id/nav_explore"
-            android:icon="@drawable/ic_language_black_24dp"
-            android:title="Explorar" />
+            android:id="@+id/adjust"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Ajustes y perfil" />
     </group>
 </menu>
