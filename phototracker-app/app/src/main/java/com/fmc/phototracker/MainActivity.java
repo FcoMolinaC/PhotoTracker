@@ -174,8 +174,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 if (login) {
                     if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                        // todo: Bajar la precision en produccion
-                        if (accuracy <= 30.0) {
+                        if (accuracy <= 15.0) {
                             Intent TrackIntent = new Intent(MainActivity.this, RegisterTrack.class);
                             startService(TrackIntent);
                             fabTrack.setVisibility(View.INVISIBLE);
@@ -327,19 +326,19 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.routes) {
             if (login) {
-                openWebURL("http://phototracker/tracks");
+                openWebURL("https://phototrack-54e73.firebaseapp.com/panel");
             } else {
                 registerRequest();
             }
         } else if (id == R.id.photos) {
             if (login) {
-                openWebURL("http://phototracker/photos");
+                openWebURL("https://phototrack-54e73.firebaseapp.com/photos");
             } else {
                 registerRequest();
             }
         } else if (id == R.id.adjust) {
             if (login) {
-                openWebURL("http://phototracker/adjust");
+                openWebURL("https://phototrack-54e73.firebaseapp.com/account");
             } else {
                 registerRequest();
             }
@@ -365,7 +364,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void requestPermission() {
-
         if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             Toast.makeText(MainActivity.this, "Write External Storage permission allows us to do store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
         } else {
@@ -641,7 +639,6 @@ public class MainActivity extends AppCompatActivity
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.register_track, null);
         final EditText trackName = alertLayout.findViewById(R.id.track_name);
-
         final Spinner spinner = alertLayout.findViewById(R.id.trackType);
         String[] types = {"Ciclismo", "Senderismo", "Carrera a pie", "Caminata"};
         spinner.setAdapter(new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_spinner_dropdown_item, types));
@@ -703,7 +700,6 @@ public class MainActivity extends AppCompatActivity
 
     private void generateGpx(String name, ArrayList<Location> track) {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-
         String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>" +
                 "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"MapSource 6.15.5\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n" +
                 "<trk><name>" + name + "</name><trkseg>";
@@ -725,7 +721,6 @@ public class MainActivity extends AppCompatActivity
         String footer = "</trkseg></trk></gpx>";
 
         File trackFileDir = getDir();
-
         if (!trackFileDir.exists() && !trackFileDir.mkdirs()) {
             Toast.makeText(this, "No se ha podido crear el directorio.",
                     Toast.LENGTH_LONG).show();
@@ -733,11 +728,8 @@ public class MainActivity extends AppCompatActivity
         }
 
         String trackName = "Track_" + name + ".gpx";
-
         String filename = trackFileDir.getPath() + File.separator + trackName;
-
         File trackFile = new File(filename);
-
         try {
             FileWriter writer = new FileWriter(trackFile, true);
             writer.write(header);
@@ -745,9 +737,6 @@ public class MainActivity extends AppCompatActivity
             writer.append(footer);
             writer.flush();
             writer.close();
-            //todo: borrar en fase de produccion
-            Toast.makeText(this, "Archivo creado", Toast.LENGTH_SHORT).show();
-
             uploadTrack(filename, trackName);
 
         } catch (IOException e) {
@@ -759,7 +748,6 @@ public class MainActivity extends AppCompatActivity
         StorageReference storageRef = storage.getReference();
         final StorageReference trackRef = storageRef.child("tracks/" + trackName);
         final DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-
         final DecimalFormat f = new DecimalFormat("##.00");
         final double trackLong = SphericalUtil.computeLength(trackLatLng);
 

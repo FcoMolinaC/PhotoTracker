@@ -23,10 +23,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
-    EditText usertext;
-    EditText passtext;
-    EditText etPassword;
-    EditText etEmail;
+    EditText usertext, passtext, etPassword, etEmail;
     boolean login;
 
     private FirebaseAuth auth;

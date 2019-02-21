@@ -12,7 +12,6 @@ import java.util.TimerTask;
 public class SplashScreenActivity extends AppCompatActivity {
 
     // Establece la duración de la actividad
-    // To-Do: establecer el tiempo de carga de la base de datos cuando esté implementada
     private static final long SPLASH_SCREEN_DELAY = 3000;
 
     @Override

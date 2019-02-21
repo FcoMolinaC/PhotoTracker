@@ -30,7 +30,6 @@ public class RegisterTrack extends Service
 
     Location location;
     LocationManager locationManager;
-    double accuracy;
     long time = 0;
     float distance = 10;
     ArrayList<Location> track = new ArrayList<>();
@@ -138,16 +137,8 @@ public class RegisterTrack extends Service
 
     @Override
     public void onLocationChanged(Location location) {
-        //todo; bajar precision en modo produccion
-        if (location.getAccuracy() < 10) {
+        if (location.getAccuracy() < 15) {
             track.add(location);
-
-            //todo: borrar la tostada en fase de producción
-            Toast.makeText(this, "Punto almacenado\nLatitud: " + location.getLatitude() +
-                            "\nLongitud: " + location.getLongitude() +
-                            "\nAltitud: " + location.getAltitude() +
-                            "\nPrecisión: " + Math.round(accuracy) + " m",
-                    Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Precisión insuficiente para grabar punto", Toast.LENGTH_SHORT).show();
         }
